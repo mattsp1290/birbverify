@@ -1,0 +1,148 @@
+{
+  "journeys": [
+    6,
+    7
+  ],
+  "stale_process_exit": 0,
+  "stale_mutation": "fenced",
+  "quarantine_blocked_release": true,
+  "waiting_events": [
+    {
+      "seq": 1,
+      "at": 1793983112.1889484,
+      "event": "environment_wait",
+      "request": "second",
+      "attempt": "second-a1"
+    },
+    {
+      "seq": 2,
+      "at": 1793983112.213943,
+      "event": "environment_wait",
+      "request": "second",
+      "attempt": "second-a1"
+    }
+  ],
+  "first": {
+    "contract_version": "birbverify.v1",
+    "request_id": "first",
+    "request_sha256": "79b9db37a22489fbbd22986fb11e5f10a07b24050cdf7e430fe92a55b5f6af1f",
+    "attempt_id": "first-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+      "pr_head": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+      "base": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "afea1db06420d9da5da2ddcf6485d72e6f47d9fadcdeb81bc0df7b7bfaece806",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:31.564906Z",
+    "finished_at": "2026-11-06T16:38:32.760493Z",
+    "observed_before": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+    "observed_after": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "not_run",
+        "observation": "check did not finish before inconclusive",
+        "duration_ms": 0,
+        "artifacts": []
+      }
+    ],
+    "operation_id": "first.apply",
+    "operation_reconciled": false,
+    "outcome": "inconclusive",
+    "cleanup": "unknown",
+    "cancellation": "none",
+    "termination": "unknown",
+    "environment_release": "quarantined",
+    "reason": "termination_unknown"
+  },
+  "second": {
+    "contract_version": "birbverify.v1",
+    "request_id": "second",
+    "request_sha256": "15dd4979d5d22fce22414a49797f3c4ec01f897695564de5b45dadbec50ee7bb",
+    "attempt_id": "second-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+      "pr_head": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+      "base": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "afea1db06420d9da5da2ddcf6485d72e6f47d9fadcdeb81bc0df7b7bfaece806",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:32.816738Z",
+    "finished_at": "2026-11-06T16:38:33.448610Z",
+    "observed_before": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+    "observed_after": "97908581d447b8aaadc7a3e7d156ef89a61d35e2",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "passed",
+        "observation": "{\"assertion\": \"value equals 42\", \"observed\": 42, \"passed\": true}\n",
+        "duration_ms": 443,
+        "artifacts": [
+          {
+            "id": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "kind": "observation",
+            "size": 65,
+            "sha256": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "captured_at": "2026-11-06T16:38:33.414480Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          },
+          {
+            "id": "056cf344f3d75b3e3e551fc1c8e09ba6031cfde6e16a1027415f407b01cf72b3",
+            "kind": "command",
+            "size": 358,
+            "sha256": "056cf344f3d75b3e3e551fc1c8e09ba6031cfde6e16a1027415f407b01cf72b3",
+            "captured_at": "2026-11-06T16:38:33.417505Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          }
+        ]
+      }
+    ],
+    "operation_id": "second.apply",
+    "operation_reconciled": false,
+    "outcome": "passed",
+    "cleanup": "complete",
+    "cancellation": "none",
+    "termination": "confirmed",
+    "environment_release": "released",
+    "reason": "checks_completed"
+  }
+}

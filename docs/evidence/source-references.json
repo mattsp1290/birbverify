@@ -1,0 +1,104 @@
+[
+  {
+    "repository": "birbforge",
+    "revision": "33d47201fbe9967dd9642f6c836cd2e768bd00c1",
+    "path": "docs/start-repository-owner.md",
+    "sha256": "9762cce7cf520064635f87bcaeb9756933d809191633e18db5deadfdb9c561cf"
+  },
+  {
+    "repository": "birbforge",
+    "revision": "33d47201fbe9967dd9642f6c836cd2e768bd00c1",
+    "path": "docs/repository-owners.md",
+    "sha256": "0be3ee5e23909d1f4b6dc3baaede82f70336fc682633dee4860abbb51d664313"
+  },
+  {
+    "repository": "birbforge",
+    "revision": "33d47201fbe9967dd9642f6c836cd2e768bd00c1",
+    "path": "docs/verification-contract.md",
+    "sha256": "8b969444ea049e7a1999d85ef2ae730a98f9a820274e3fab5f016ec5799de1e3"
+  },
+  {
+    "repository": "birbforge",
+    "revision": "33d47201fbe9967dd9642f6c836cd2e768bd00c1",
+    "path": "docs/action-contract.md",
+    "sha256": "7dc9b8aa38df558ccdebd790e540497b0ef9a2d24486a4eae95e306163810cc6"
+  },
+  {
+    "repository": "birbcrew",
+    "revision": "88b219c18adeb352d2f291f099ede990a3190a58",
+    "path": "docs/architecture.md",
+    "sha256": "c2a1e4a43365370eaffca10757781f05710c2fcdfb9dc2851c31cb1e90b496a5"
+  },
+  {
+    "repository": "birbcrew",
+    "revision": "88b219c18adeb352d2f291f099ede990a3190a58",
+    "path": "pyproject.toml",
+    "sha256": "82807034773e9078024a835393c0b406f9520f42e1bc51e131293ba0b90b388e"
+  },
+  {
+    "repository": "birbforge",
+    "revision": "5d333cda03a6b385b669f6025b248d4ba4272071",
+    "path": "docs/evidence/private-access-status.md",
+    "sha256": "1766d19aeba9c27d1d4050003c62baff2d0f9ec10566ab47cdb6f134e9a7a3ef"
+  },
+  {
+    "repository": "birbhomes",
+    "revision": "3f6d007fc0dada2099d73713f3abf839d4b63dfb",
+    "path": "README.md",
+    "sha256": "8bd0fa8fc4bdb420339b588c859ab9f3543be894a979058f2d596d6fa879a8d5"
+  },
+  {
+    "repository": "birbhomes",
+    "revision": "3f6d007fc0dada2099d73713f3abf839d4b63dfb",
+    "path": ".agents/skills/k3s-worker-onboard/SKILL.md",
+    "sha256": "71c99adc423366ea3f5d786bcd2288ada7e5496e6de5d9a8cb78c85c817f54f2"
+  },
+  {
+    "repository": "birbhomes",
+    "revision": "3f6d007fc0dada2099d73713f3abf839d4b63dfb",
+    "path": ".agents/skills/k3s-worker-onboard/references/lifecycle.md",
+    "sha256": "3095a5e2d397c5964f2fa5ba0005612b528ba41a4def5a7cd218a5257d2311d4"
+  },
+  {
+    "repository": "birbhomes",
+    "revision": "3f6d007fc0dada2099d73713f3abf839d4b63dfb",
+    "path": ".agents/skills/birbhomes-deploy-private/SKILL.md",
+    "sha256": "67c00bdac4d71f477d605c09532572aafce3446b8c0fc6bad1469312c48fcee6"
+  },
+  {
+    "repository": "birbhomes",
+    "revision": "3f6d007fc0dada2099d73713f3abf839d4b63dfb",
+    "path": "docs/evidence/mac-worker-preparation-2026-10-10.md",
+    "sha256": "813d5b089956d560f710db06cc10c9592ac24781a98f8e333173a7970bd0b67c"
+  },
+  {
+    "repository": "birbparty",
+    "revision": "83e58a5da57ca0a1bf05fe28b26b38953195cf76",
+    "path": "AGENTS.md",
+    "sha256": "ccb131aca0ae2198d66643db46327e75586cba4433b6478e0899af44a4cd80c6"
+  },
+  {
+    "repository": "birbparty",
+    "revision": "83e58a5da57ca0a1bf05fe28b26b38953195cf76",
+    "path": "README.md",
+    "sha256": "92ac222882d86905fface17185ae9274b78d60073e18d7c66900f0a72f8a6208"
+  },
+  {
+    "repository": "birbparty",
+    "revision": "83e58a5da57ca0a1bf05fe28b26b38953195cf76",
+    "path": "infra/README.md",
+    "sha256": "1b9d51d6b0a040df467836531038a88f01c67cd9d992974196f91e7302dc77d2"
+  },
+  {
+    "repository": "birbparty",
+    "revision": "83e58a5da57ca0a1bf05fe28b26b38953195cf76",
+    "path": "infra/runbooks/deploy.md",
+    "sha256": "bb8cc07bb33c0f9e6fa3fbb4632042560b7b2a2068098d2b898c896d5602414d"
+  },
+  {
+    "repository": "birbparty",
+    "revision": "83e58a5da57ca0a1bf05fe28b26b38953195cf76",
+    "path": "infra/runbooks/environments.md",
+    "sha256": "4b39d553fcabf1f67a3787ed7bf6621d425b03e9861c6d8685a25afd49cfe3e3"
+  }
+]

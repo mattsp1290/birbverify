@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+uv sync --locked
+mkdir -p .proof/bin
+case "$(uname -m)" in
+  aarch64|arm64) arch=arm64 ;;
+  x86_64) arch=amd64 ;;
+  *) echo 'Unsupported architecture' >&2; exit 1 ;;
+esac
+archive="temporal_cli_1.10.0_linux_${arch}.tar.gz"
+curl -fsSL "https://github.com/temporalio/cli/releases/download/v1.10.0/$archive" -o ".proof/bin/$archive"
+curl -fsSL https://github.com/temporalio/cli/releases/download/v1.10.0/checksums.txt -o .proof/bin/checksums.txt
+(cd .proof/bin && rg " $archive\$" checksums.txt | sha256sum -c -)
+tar -xzf ".proof/bin/$archive" -C .proof/bin temporal
+.proof/bin/temporal --version
+docker pull python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6
+bn --version

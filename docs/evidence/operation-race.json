@@ -1,0 +1,6 @@
+{
+  "same_operation_results_equal": true,
+  "effect_count": 1,
+  "receipt_read_after_revoke": true,
+  "unapproved_principal": "denied_at_target"
+}

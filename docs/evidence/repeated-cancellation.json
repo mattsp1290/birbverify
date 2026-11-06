@@ -1,0 +1,57 @@
+{
+  "cancel_after_create_before_reply": true,
+  "repeated_cancel_during_cleanup": true,
+  "release_before_stop": false,
+  "result": {
+    "contract_version": "birbverify.v1",
+    "request_id": "double-cancel",
+    "request_sha256": "5d62e2fc024ffaa0a4d5fa1d65cbd0afe653fdecfa907b5ff9f0f645b51537f7",
+    "attempt_id": "double-cancel-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "da5e11b8052b731abbe10b86336685a78d3cd459",
+      "pr_head": "da5e11b8052b731abbe10b86336685a78d3cd459",
+      "base": "da5e11b8052b731abbe10b86336685a78d3cd459",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "843cb8b8f3c12e1479e92e0595ebbf0dab81bfb8473c982414ebfd5f35db71bb",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:39:05.085076Z",
+    "finished_at": "2026-11-06T16:39:05.291335Z",
+    "observed_before": "da5e11b8052b731abbe10b86336685a78d3cd459",
+    "observed_after": "da5e11b8052b731abbe10b86336685a78d3cd459",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "not_run",
+        "observation": "check did not finish before cancelled",
+        "duration_ms": 0,
+        "artifacts": []
+      }
+    ],
+    "operation_id": "double-cancel.apply",
+    "operation_reconciled": false,
+    "outcome": "cancelled",
+    "cleanup": "complete",
+    "cancellation": "acknowledged",
+    "termination": "confirmed",
+    "environment_release": "released",
+    "reason": "cancellation_acknowledged"
+  }
+}

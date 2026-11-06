@@ -1,0 +1,212 @@
+{
+  "journeys": [
+    1,
+    2,
+    3,
+    8
+  ],
+  "pass": {
+    "contract_version": "birbverify.v1",
+    "request_id": "pass",
+    "request_sha256": "46088d454ea0d8c045d193f154ef91f56995c9ddf209886fa1091c4bb1b2b80a",
+    "attempt_id": "pass-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+      "pr_head": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+      "base": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "86b5d236492cb9fff947ee91e9d9bc9508cb77ae937cfe42930a6bb75e8408e4",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:28.015547Z",
+    "finished_at": "2026-11-06T16:38:28.495816Z",
+    "observed_before": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+    "observed_after": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "passed",
+        "observation": "{\"assertion\": \"value equals 42\", \"observed\": 42, \"passed\": true}\n",
+        "duration_ms": 409,
+        "artifacts": [
+          {
+            "id": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "kind": "observation",
+            "size": 65,
+            "sha256": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "captured_at": "2026-11-06T16:38:28.467870Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          },
+          {
+            "id": "8006690e6bb99dcddcd45844a06d35e177b9b391dc154be58c4c867815a81118",
+            "kind": "command",
+            "size": 354,
+            "sha256": "8006690e6bb99dcddcd45844a06d35e177b9b391dc154be58c4c867815a81118",
+            "captured_at": "2026-11-06T16:38:28.471284Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          }
+        ]
+      }
+    ],
+    "operation_id": "pass.apply",
+    "operation_reconciled": false,
+    "outcome": "passed",
+    "cleanup": "complete",
+    "cancellation": "none",
+    "termination": "confirmed",
+    "environment_release": "released",
+    "reason": "checks_completed"
+  },
+  "missing": {
+    "contract_version": "birbverify.v1",
+    "request_id": "missing",
+    "request_sha256": "40ed98c910309f1cdffff1b3b3b9598b754e722eb96cfe215b8e49138bb00d20",
+    "attempt_id": "missing-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+      "pr_head": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+      "base": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "86b5d236492cb9fff947ee91e9d9bc9508cb77ae937cfe42930a6bb75e8408e4",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:28.534704Z",
+    "finished_at": "2026-11-06T16:38:29.022976Z",
+    "observed_before": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+    "observed_after": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "passed",
+        "observation": "{\"assertion\": \"value equals 42\", \"observed\": 42, \"passed\": true}\n",
+        "duration_ms": 415,
+        "artifacts": [
+          {
+            "id": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "kind": "observation",
+            "size": 65,
+            "sha256": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "captured_at": "2026-11-06T16:38:28.996897Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          }
+        ]
+      }
+    ],
+    "operation_id": "missing.apply",
+    "operation_reconciled": false,
+    "outcome": "inconclusive",
+    "cleanup": "complete",
+    "cancellation": "none",
+    "termination": "confirmed",
+    "environment_release": "released",
+    "reason": "required_evidence_missing"
+  },
+  "assertion_failed": {
+    "contract_version": "birbverify.v1",
+    "request_id": "assert-failed",
+    "request_sha256": "8402c0e54aea814c693e65e2abc73657c306eea29ce32625d99ccd7afdf6eff7",
+    "attempt_id": "assert-failed-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "560da87ed2102b5a967e485e1bfddd9e1a4f5ca1",
+      "pr_head": "560da87ed2102b5a967e485e1bfddd9e1a4f5ca1",
+      "base": "0ecceda3e358646efe6a5bda4a80a0399e3ce3a3",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "86b5d236492cb9fff947ee91e9d9bc9508cb77ae937cfe42930a6bb75e8408e4",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:29.060445Z",
+    "finished_at": "2026-11-06T16:38:29.561646Z",
+    "observed_before": "560da87ed2102b5a967e485e1bfddd9e1a4f5ca1",
+    "observed_after": "560da87ed2102b5a967e485e1bfddd9e1a4f5ca1",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "failed",
+        "observation": "{\"assertion\": \"value equals 42\", \"observed\": 7, \"passed\": false}\n",
+        "duration_ms": 421,
+        "artifacts": [
+          {
+            "id": "e65beb3cc69f44f4b9c62c3f045063a732915e0b8d7d3989520e73c183bbd9eb",
+            "kind": "observation",
+            "size": 65,
+            "sha256": "e65beb3cc69f44f4b9c62c3f045063a732915e0b8d7d3989520e73c183bbd9eb",
+            "captured_at": "2026-11-06T16:38:29.532575Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          },
+          {
+            "id": "026f811fb63eef6e30b87e9656dc7a85437b6db6b086b279070dbbc24fe04e37",
+            "kind": "command",
+            "size": 372,
+            "sha256": "026f811fb63eef6e30b87e9656dc7a85437b6db6b086b279070dbbc24fe04e37",
+            "captured_at": "2026-11-06T16:38:29.536151Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          }
+        ]
+      }
+    ],
+    "operation_id": "assert-failed.apply",
+    "operation_reconciled": false,
+    "outcome": "failed",
+    "cleanup": "complete",
+    "cancellation": "none",
+    "termination": "confirmed",
+    "environment_release": "released",
+    "reason": "checks_completed"
+  }
+}

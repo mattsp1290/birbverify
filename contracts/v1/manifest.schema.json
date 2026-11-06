@@ -1,0 +1,398 @@
+{
+  "$defs": {
+    "Artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "observation",
+            "command"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "size": {
+          "maximum": 65536,
+          "minimum": 0,
+          "title": "Size",
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "classification": {
+          "const": "private",
+          "title": "Classification",
+          "type": "string"
+        },
+        "retention": {
+          "const": "fixture-local-until-owner-deletes-v1",
+          "title": "Retention",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "size",
+        "sha256",
+        "captured_at",
+        "classification",
+        "retention"
+      ],
+      "title": "Artifact",
+      "type": "object"
+    },
+    "Candidate": {
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Repository",
+          "type": "string"
+        },
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Commit",
+          "type": "string"
+        },
+        "pr_head": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Pr Head",
+          "type": "string"
+        },
+        "base": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Base",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "head",
+            "integration"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Sha256"
+        }
+      },
+      "required": [
+        "repository",
+        "commit",
+        "pr_head",
+        "base",
+        "kind"
+      ],
+      "title": "Candidate",
+      "type": "object"
+    },
+    "CheckRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "check_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Check Id",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "passed",
+            "failed",
+            "not_run",
+            "inconclusive"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "observation": {
+          "maxLength": 1024,
+          "title": "Observation",
+          "type": "string"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "check_id",
+        "outcome",
+        "observation",
+        "duration_ms",
+        "artifacts"
+      ],
+      "title": "CheckRecord",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "birbverify.v1",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "attempt_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "attempt_number": {
+      "maximum": 3,
+      "minimum": 1,
+      "title": "Attempt Number",
+      "type": "integer"
+    },
+    "retry_reason": {
+      "enum": [
+        "initial",
+        "infrastructure_recovery"
+      ],
+      "title": "Retry Reason",
+      "type": "string"
+    },
+    "prior_attempt_id": {
+      "anyOf": [
+        {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Prior Attempt Id"
+    },
+    "correlation_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Correlation Id",
+      "type": "string"
+    },
+    "telemetry_correlation": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Telemetry Correlation",
+      "type": "string"
+    },
+    "candidate": {
+      "$ref": "#/$defs/Candidate"
+    },
+    "plan_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "policy_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Policy Revision",
+      "type": "string"
+    },
+    "environment": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Environment",
+      "type": "string"
+    },
+    "worker_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Worker Id",
+      "type": "string"
+    },
+    "worker_capabilities": {
+      "items": {
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+        "type": "string"
+      },
+      "title": "Worker Capabilities",
+      "type": "array"
+    },
+    "tools": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tools",
+      "type": "array"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "finished_at": {
+      "format": "date-time",
+      "title": "Finished At",
+      "type": "string"
+    },
+    "observed_before": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Observed Before"
+    },
+    "observed_after": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Observed After"
+    },
+    "checks": {
+      "items": {
+        "$ref": "#/$defs/CheckRecord"
+      },
+      "title": "Checks",
+      "type": "array"
+    },
+    "operation_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "operation_reconciled": {
+      "title": "Operation Reconciled",
+      "type": "boolean"
+    },
+    "outcome": {
+      "enum": [
+        "passed",
+        "failed",
+        "inconclusive",
+        "cancelled",
+        "superseded"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "cleanup": {
+      "enum": [
+        "complete",
+        "failed",
+        "unknown"
+      ],
+      "title": "Cleanup",
+      "type": "string"
+    },
+    "cancellation": {
+      "enum": [
+        "none",
+        "requested",
+        "acknowledged"
+      ],
+      "title": "Cancellation",
+      "type": "string"
+    },
+    "termination": {
+      "enum": [
+        "confirmed",
+        "unknown"
+      ],
+      "title": "Termination",
+      "type": "string"
+    },
+    "environment_release": {
+      "enum": [
+        "released",
+        "retained",
+        "quarantined"
+      ],
+      "title": "Environment Release",
+      "type": "string"
+    },
+    "reason": {
+      "enum": [
+        "checks_completed",
+        "required_evidence_missing",
+        "infrastructure_error",
+        "worker_lost",
+        "cancellation_acknowledged",
+        "termination_unknown"
+      ],
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "contract_version",
+    "request_id",
+    "request_sha256",
+    "attempt_id",
+    "attempt_number",
+    "retry_reason",
+    "prior_attempt_id",
+    "correlation_id",
+    "telemetry_correlation",
+    "candidate",
+    "plan_sha256",
+    "policy_revision",
+    "environment",
+    "worker_id",
+    "worker_capabilities",
+    "tools",
+    "started_at",
+    "finished_at",
+    "observed_before",
+    "observed_after",
+    "checks",
+    "operation_id",
+    "operation_reconciled",
+    "outcome",
+    "cleanup",
+    "cancellation",
+    "termination",
+    "environment_release",
+    "reason"
+  ],
+  "title": "Manifest",
+  "type": "object"
+}

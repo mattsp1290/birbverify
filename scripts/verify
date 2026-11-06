@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+umask 077
+uv run ruff check src tests scripts/export-contract scripts/beans-fixture scripts/record-evidence scripts/public-check
+uv run ruff format --check src tests scripts/export-contract scripts/beans-fixture scripts/record-evidence scripts/public-check
+mkdir -p .proof
+touch .proof/verification-started
+# Prevent ambient observability auto-instrumentation from contacting live accounts.
+env -i PATH="$PATH" HOME="$HOME" LANG=C.UTF-8 UV_CACHE_DIR="${UV_CACHE_DIR:-$HOME/.cache/uv}" \
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 BIRBVERIFY_SAFE_EVIDENCE="$PWD/docs/evidence" \
+  uv run pytest -p pytest_asyncio.plugin -q --basetemp .proof/test-runs --junitxml=.proof/junit.xml
+uv run scripts/beans-fixture > .proof/beans-fixture.json
+uv run scripts/record-evidence
+uv run scripts/public-check

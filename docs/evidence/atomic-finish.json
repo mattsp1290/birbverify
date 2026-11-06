@@ -1,0 +1,6 @@
+{
+  "concurrent_duplicate_results_equal": true,
+  "lost_finish_reply_reconciled": true,
+  "effect_count": 1,
+  "new_attempt_after_terminal": false
+}
