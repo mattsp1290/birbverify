@@ -16,7 +16,8 @@ scripts/verify
 Verification starts disposable loopback Temporal and Unix-socket fixture
 services, creates isolated Git candidates, executes container checks, kills a
 worker and a stale mutation probe, and checks cancellation and cleanup. It
-writes safe synthetic summaries to `docs/evidence`. Raw logs, container output,
+writes synthetic summaries to ignored `.proof/evidence`. Checked-in evidence is
+historical and is not replaced by a new run. Raw logs, container output,
 artifact files and databases stay under ignored `.proof/test-runs`. Re-running
 verification replaces only that disposable test directory. Beans command tests
 use new disposable hubs under `/tmp`, without remotes or private-hub access.
@@ -25,3 +26,12 @@ Read the [contract reference](docs/contract.md),
 [fixture boundaries](docs/architecture.md), and
 [acceptance evidence](docs/verification.md).
 Consumers pin the [v1 schemas and compatibility fixtures](contracts/v1).
+
+The optional [contextless closure extension](docs/contextless-closure.md) uses a
+separate one-attempt fixture profile, versioned target transport, and an
+installation-owned supervisor. Its [gate map](docs/contextless-closure-gates.md)
+distinguishes producer tests from later consumer integration. Existing consumers
+remain pinned to v1 until an explicit integration change.
+
+The [closure acceptance report](docs/contextless-closure-acceptance.md) records
+the executed source revision, independent review and remaining integration gates.

@@ -107,8 +107,14 @@ def spawn(root: Path, module: str, *args: str):
 
 def start_target(root):
     process = spawn(root, "birbverify.target")
+    config = json.loads((root / "installation.json").read_text())
+    address = (
+        root / "transport" / "target.sock"
+        if config.get("closure_binding")
+        else root / "target.sock"
+    )
     for _ in range(100):
-        if (root / "target.sock").exists():
+        if address.exists():
             return process
         if process.poll() is not None:
             raise RuntimeError("target failed to start")

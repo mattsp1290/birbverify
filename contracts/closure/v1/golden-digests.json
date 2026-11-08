@@ -1,0 +1,7 @@
+{
+  "begin_sha256": "78ca0ab9c1dceb9d54d484d670554eaca3cc74c9c02765294d2fc4d17ce86f01",
+  "begin_unicode_sha256": "bfc9a4a985da97cddace768e12f9ffaaa4507dd1c551459bfe42621da36460cb",
+  "canonical_rule": "sorted-json-keys-compact-ascii-escaped-utf8-full-model",
+  "receipt_sha256": "2803ed3d03514b7e733a859bee82ffb3394cf33599453cbbe66dd57084910294",
+  "request_sha256": "f77f61ca0ff7710b0829b5726413342d6ea16bca21ffed788adc4c6218a7e712"
+}

@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+
+import hashlib
+import json
+from pathlib import Path
+
+from birbverify.closure import (
+    BeginClosure,
+    ClosureReceipt,
+    Envelope,
+    LifecycleIntent,
+    Progress,
+    Registration,
+    Snapshot,
+)
+
+
+def sha(value):
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def write(path, value):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+
+
+root = Path(__file__).resolve().parents[1]
+closure = root / "contracts/closure/v1"
+for name, model in (
+    ("begin", BeginClosure),
+    ("receipt", ClosureReceipt),
+    ("progress", Progress),
+    ("snapshot", Snapshot),
+):
+    write(closure / f"{name}.schema.json", model.model_json_schema())
+for name, model in (
+    ("envelope", Envelope),
+    ("registration", Registration),
+    ("intent", LifecycleIntent),
+):
+    write(root / "contracts/target/v2" / f"{name}.schema.json", model.model_json_schema())
+request = json.loads((root / "contracts/v1/request.example.json").read_text())
+request["resources"]["max_attempts"] = 1
+incarnation = "00000000-0000-4000-8000-000000000001"
+identity = "00000000-0000-4000-8000-000000000002"
+command = {
+    "contract_version": "birbverify.closure.v1",
+    "closure_id": identity,
+    "target_id": "fixture-local",
+    "target_incarnation": incarnation,
+    "request": request,
+    "request_sha256": sha(request),
+    "expected_attempt_id": None,
+    "expected_execution_epoch": None,
+    "reason": "dispatch_unknown",
+    "authorization": {
+        "principal": request["authority"]["principal"],
+        "workflow": request["authority"]["workflow"],
+        "policy_revision": request["authority"]["policy_revision"],
+        "admission_target_incarnation": incarnation,
+        "closure_actor": "fixture-supervisor",
+        "grant_reference": "fixture-closure-grant",
+    },
+}
+command = BeginClosure.model_validate(command).model_dump(mode="json")
+write(closure / "begin.example.json", command)
+unicode_command = json.loads(json.dumps(command))
+unicode_request = unicode_command["request"]
+unicode_request["plan"]["checks"][0]["assertion"] = "résultat attendu ✓"
+unicode_request["plan_sha256"] = sha(unicode_request["plan"])
+unicode_command["request_sha256"] = sha(unicode_request)
+unicode_command = BeginClosure.model_validate(unicode_command).model_dump(mode="json")
+write(closure / "begin-unicode.example.json", unicode_command)
+
+
+def operation(step):
+    return {"target_incarnation": incarnation, "closure_id": identity, "step": step}
+
+
+sealed = {
+    "request_sha256": sha(request),
+    "epoch": 1,
+    "closure_id": identity,
+    "target_incarnation": incarnation,
+}
+fence_ref = {
+    "id": sha(sealed),
+    "sha256": sha(sealed),
+    "kind": "fence",
+    "checker_id": "fixture-local",
+}
+procedure = hashlib.sha256(b"fixture-reset-v1:sealed-owner-transaction").hexdigest()
+cleanup_payload = {
+    "operation_id": operation("cleanup"),
+    "execution_epoch": 1,
+    "procedure_sha256": procedure,
+}
+receipt = {
+    "contract_version": "birbverify.closure.v1",
+    "producer_revision": "1" * 40,
+    "adapter_revision": "2" * 64,
+    "closure_actor": "fixture-supervisor",
+    "grant_reference": "fixture-closure-grant",
+    "policy_revision": request["authority"]["policy_revision"],
+    "committed_at": "2030-01-01T00:00:00Z",
+    "closure_id": identity,
+    "command_sha256": sha(command),
+    "request_id": request["request_id"],
+    "idempotency_key": request["idempotency_key"],
+    "request_sha256": sha(request),
+    "target_id": "fixture-local",
+    "target_incarnation": incarnation,
+    "execution_epoch": 1,
+    "acquisition": {"kind": "never_acquired", "attempt_id": None, "reservation_sha256": None},
+    "fence": {
+        "operation_id": operation("fence"),
+        "commit_revision": 1,
+        "sealed_request_sha256": sha(sealed),
+        "effect_history_sha256": sha({"effects": []}),
+        "evidence_ref": fence_ref,
+    },
+    "stop": {"kind": "not_started_target_confirmed", "evidence_refs": [fence_ref]},
+    "cleanup": {
+        "status": "complete",
+        "procedure_sha256": procedure,
+        "operation_id": operation("cleanup"),
+        "payload_sha256": sha(cleanup_payload),
+        "result_sha256": sha({"value": 0, "candidate": None}),
+        "no_op_reason": "never_acquired",
+    },
+    "history": {"manifest_status": "unavailable", "manifest_sha256": None},
+    "release": {
+        "status": "release_confirmed",
+        "operation_id": operation("release"),
+        "environment_revision": 3,
+    },
+}
+receipt["receipt_sha256"] = sha(receipt)
+ClosureReceipt.model_validate(receipt)
+write(closure / "receipt.example.json", receipt)
+write(
+    closure / "golden-digests.json",
+    {
+        "canonical_rule": "sorted-json-keys-compact-ascii-escaped-utf8-full-model",
+        "begin_sha256": sha(command),
+        "request_sha256": sha(request),
+        "receipt_sha256": receipt["receipt_sha256"],
+        "begin_unicode_sha256": sha(unicode_command),
+    },
+)

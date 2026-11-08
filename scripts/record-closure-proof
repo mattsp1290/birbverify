@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+evidence = Path(os.environ["BIRBVERIFY_CLOSURE_EVIDENCE"])
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def sources():
+    paths = [root / "pyproject.toml", root / "uv.lock"]
+    for name in ("src", "tests", "scripts", "contracts", "fixtures"):
+        paths.extend(
+            path
+            for path in (root / name).rglob("*")
+            if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
+        )
+    return {str(path.relative_to(root)): sha(path) for path in sorted(paths)}
+
+
+manifest = evidence / "source-manifest.json"
+if sys.argv[1] == "start":
+    record = {
+        "caller_supplied_revision": os.environ["BIRBVERIFY_SOURCE_REVISION"],
+        "revision_attribution": "external-commit-byte-audit-required",
+        "worker_image_id": subprocess.check_output(
+            [
+                "docker",
+                "image",
+                "inspect",
+                "--format",
+                "{{.Id}}",
+                os.environ["BIRBVERIFY_WORKER_IMAGE"],
+            ],
+            text=True,
+        ).strip(),
+        "source_sha256": sources(),
+    }
+    manifest.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+else:
+    before = json.loads(manifest.read_text())
+    unchanged = before["source_sha256"] == sources()
+    junit = evidence / "junit.xml"
+    suites = list(ET.parse(junit).getroot().iter("testsuite")) if junit.exists() else []
+    result = {
+        "pytest_exit_code": int(sys.argv[2]),
+        "source_unchanged": unchanged,
+        "source_manifest_sha256": sha(manifest),
+        "counts": {
+            key: sum(int(suite.attrib.get(key, 0)) for suite in suites)
+            for key in ("tests", "failures", "errors", "skipped")
+        },
+        "artifact_sha256": {
+            str(path.relative_to(evidence)): sha(path)
+            for path in sorted(evidence.rglob("*"))
+            if path.is_file() and path.name != "proof-summary.json"
+        },
+    }
+    (evidence / "proof-summary.json").write_text(
+        json.dumps(result, indent=2, sort_keys=True) + "\n"
+    )
+    if not unchanged:
+        raise SystemExit("Source changed during proof; attribution rejected")

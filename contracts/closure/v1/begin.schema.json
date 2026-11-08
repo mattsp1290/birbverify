@@ -1,0 +1,471 @@
+{
+  "$defs": {
+    "Authority": {
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Environment",
+          "type": "string"
+        },
+        "permitted_operations": {
+          "items": {
+            "enum": [
+              "fixture.apply",
+              "fixture.reset"
+            ],
+            "type": "string"
+          },
+          "title": "Permitted Operations",
+          "type": "array"
+        },
+        "policy_revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Policy Revision",
+          "type": "string"
+        },
+        "principal": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Principal",
+          "type": "string"
+        },
+        "workflow": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Workflow",
+          "type": "string"
+        }
+      },
+      "required": [
+        "principal",
+        "workflow",
+        "policy_revision",
+        "environment",
+        "permitted_operations"
+      ],
+      "title": "Authority",
+      "type": "object"
+    },
+    "Authorization": {
+      "additionalProperties": false,
+      "properties": {
+        "admission_target_incarnation": {
+          "format": "uuid",
+          "title": "Admission Target Incarnation",
+          "type": "string"
+        },
+        "closure_actor": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Closure Actor",
+          "type": "string"
+        },
+        "grant_reference": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Grant Reference",
+          "type": "string"
+        },
+        "policy_revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Policy Revision",
+          "type": "string"
+        },
+        "principal": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Principal",
+          "type": "string"
+        },
+        "workflow": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Workflow",
+          "type": "string"
+        }
+      },
+      "required": [
+        "principal",
+        "workflow",
+        "policy_revision",
+        "admission_target_incarnation",
+        "closure_actor",
+        "grant_reference"
+      ],
+      "title": "Authorization",
+      "type": "object"
+    },
+    "Candidate": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Sha256"
+        },
+        "base": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Base",
+          "type": "string"
+        },
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Commit",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "head",
+            "integration"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "pr_head": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Pr Head",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Repository",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "commit",
+        "pr_head",
+        "base",
+        "kind"
+      ],
+      "title": "Candidate",
+      "type": "object"
+    },
+    "Check": {
+      "additionalProperties": false,
+      "properties": {
+        "assertion": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Assertion",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "procedure_path": {
+          "const": "check.py",
+          "title": "Procedure Path",
+          "type": "string"
+        },
+        "procedure_revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Procedure Revision",
+          "type": "string"
+        },
+        "procedure_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Procedure Sha256",
+          "type": "string"
+        },
+        "required_artifacts": {
+          "items": {
+            "enum": [
+              "observation",
+              "command"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Required Artifacts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "assertion",
+        "procedure_path",
+        "procedure_revision",
+        "procedure_sha256",
+        "required_artifacts"
+      ],
+      "title": "Check",
+      "type": "object"
+    },
+    "EvidencePolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "const": "private",
+          "title": "Classification",
+          "type": "string"
+        },
+        "retention": {
+          "const": "fixture-local-until-owner-deletes-v1",
+          "title": "Retention",
+          "type": "string"
+        },
+        "telemetry_correlation": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Telemetry Correlation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "classification",
+        "retention",
+        "telemetry_correlation"
+      ],
+      "title": "EvidencePolicy",
+      "type": "object"
+    },
+    "Plan": {
+      "additionalProperties": false,
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/Check"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Checks",
+          "type": "array"
+        },
+        "cleanup": {
+          "const": "fixture-reset-v1",
+          "title": "Cleanup",
+          "type": "string"
+        },
+        "revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "revision",
+        "checks",
+        "cleanup"
+      ],
+      "title": "Plan",
+      "type": "object"
+    },
+    "Request": {
+      "additionalProperties": false,
+      "properties": {
+        "authority": {
+          "$ref": "#/$defs/Authority"
+        },
+        "candidate": {
+          "$ref": "#/$defs/Candidate"
+        },
+        "components": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+            "type": "string"
+          },
+          "title": "Components",
+          "type": "array"
+        },
+        "contract_version": {
+          "const": "birbverify.v1",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "correlation_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Correlation Id",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/EvidencePolicy"
+        },
+        "goal_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Goal Id",
+          "type": "string"
+        },
+        "idempotency_key": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Idempotency Key",
+          "type": "string"
+        },
+        "plan": {
+          "$ref": "#/$defs/Plan"
+        },
+        "plan_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Plan Sha256",
+          "type": "string"
+        },
+        "pull_request": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Pull Request",
+          "type": "string"
+        },
+        "request_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "resources": {
+          "$ref": "#/$defs/Resources"
+        },
+        "revision_method": {
+          "const": "git-archive-and-target-receipt-v1",
+          "title": "Revision Method",
+          "type": "string"
+        }
+      },
+      "required": [
+        "contract_version",
+        "request_id",
+        "goal_id",
+        "pull_request",
+        "correlation_id",
+        "idempotency_key",
+        "candidate",
+        "plan",
+        "plan_sha256",
+        "authority",
+        "resources",
+        "evidence",
+        "components",
+        "revision_method"
+      ],
+      "title": "Request",
+      "type": "object"
+    },
+    "Resources": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "deadline": {
+          "format": "date-time",
+          "title": "Deadline",
+          "type": "string"
+        },
+        "fixture": {
+          "const": "isolated-counter-v1",
+          "title": "Fixture",
+          "type": "string"
+        },
+        "max_attempts": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Max Attempts",
+          "type": "integer"
+        },
+        "timeout_seconds": {
+          "maximum": 60,
+          "minimum": 1,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "capabilities",
+        "fixture",
+        "timeout_seconds",
+        "max_attempts",
+        "deadline"
+      ],
+      "title": "Resources",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "authorization": {
+      "$ref": "#/$defs/Authorization"
+    },
+    "closure_id": {
+      "format": "uuid",
+      "title": "Closure Id",
+      "type": "string"
+    },
+    "contract_version": {
+      "const": "birbverify.closure.v1",
+      "default": "birbverify.closure.v1",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "expected_attempt_id": {
+      "anyOf": [
+        {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Expected Attempt Id"
+    },
+    "expected_execution_epoch": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Expected Execution Epoch"
+    },
+    "reason": {
+      "enum": [
+        "dispatch_unknown",
+        "reservation_reply_lost",
+        "context_lost"
+      ],
+      "title": "Reason",
+      "type": "string"
+    },
+    "request": {
+      "$ref": "#/$defs/Request"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "target_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Target Id",
+      "type": "string"
+    },
+    "target_incarnation": {
+      "format": "uuid",
+      "title": "Target Incarnation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "closure_id",
+    "target_id",
+    "target_incarnation",
+    "request",
+    "request_sha256",
+    "expected_attempt_id",
+    "expected_execution_epoch",
+    "authorization",
+    "reason"
+  ],
+  "title": "BeginClosure",
+  "type": "object"
+}

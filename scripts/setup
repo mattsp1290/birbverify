@@ -15,4 +15,6 @@ curl -fsSL https://github.com/temporalio/cli/releases/download/v1.10.0/checksums
 tar -xzf ".proof/bin/$archive" -C .proof/bin temporal
 .proof/bin/temporal --version
 docker pull python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6
-bn --version
+if [ "${BIRBVERIFY_SETUP_PROFILE:-legacy}" != closure ]; then
+  bn --version
+fi

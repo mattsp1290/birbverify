@@ -1,0 +1,75 @@
+{
+  "acquisition": {
+    "attempt_id": null,
+    "kind": "never_acquired",
+    "reservation_sha256": null
+  },
+  "adapter_revision": "2222222222222222222222222222222222222222222222222222222222222222",
+  "cleanup": {
+    "no_op_reason": "never_acquired",
+    "operation_id": {
+      "closure_id": "00000000-0000-4000-8000-000000000002",
+      "step": "cleanup",
+      "target_incarnation": "00000000-0000-4000-8000-000000000001"
+    },
+    "payload_sha256": "80febce9a66fb0e71d2f77a580d665f8536a6f91f1080719a0005de15b858990",
+    "procedure_sha256": "a80ce84157611d876789419a769698a207b87657846a08c05a1aa789bc3e9ef4",
+    "result_sha256": "2fd8c296a9d1baad575db10a29735a0ca04127483b56bf68312db55c6700818f",
+    "status": "complete"
+  },
+  "closure_actor": "fixture-supervisor",
+  "closure_id": "00000000-0000-4000-8000-000000000002",
+  "command_sha256": "78ca0ab9c1dceb9d54d484d670554eaca3cc74c9c02765294d2fc4d17ce86f01",
+  "committed_at": "2030-01-01T00:00:00Z",
+  "contract_version": "birbverify.closure.v1",
+  "execution_epoch": 1,
+  "fence": {
+    "commit_revision": 1,
+    "effect_history_sha256": "662eafd4b2f10b5fd53ab7a429f97563d9c116c9b1f91300bb004c7dd315e49d",
+    "evidence_ref": {
+      "checker_id": "fixture-local",
+      "id": "e0c96e2890143da2be594243279b43ab279e983022873ac14bf242ce04ce3507",
+      "kind": "fence",
+      "sha256": "e0c96e2890143da2be594243279b43ab279e983022873ac14bf242ce04ce3507"
+    },
+    "operation_id": {
+      "closure_id": "00000000-0000-4000-8000-000000000002",
+      "step": "fence",
+      "target_incarnation": "00000000-0000-4000-8000-000000000001"
+    },
+    "sealed_request_sha256": "e0c96e2890143da2be594243279b43ab279e983022873ac14bf242ce04ce3507"
+  },
+  "grant_reference": "fixture-closure-grant",
+  "history": {
+    "manifest_sha256": null,
+    "manifest_status": "unavailable"
+  },
+  "idempotency_key": "submission-example",
+  "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+  "producer_revision": "1111111111111111111111111111111111111111",
+  "receipt_sha256": "2803ed3d03514b7e733a859bee82ffb3394cf33599453cbbe66dd57084910294",
+  "release": {
+    "environment_revision": 3,
+    "operation_id": {
+      "closure_id": "00000000-0000-4000-8000-000000000002",
+      "step": "release",
+      "target_incarnation": "00000000-0000-4000-8000-000000000001"
+    },
+    "status": "release_confirmed"
+  },
+  "request_id": "request-example",
+  "request_sha256": "f77f61ca0ff7710b0829b5726413342d6ea16bca21ffed788adc4c6218a7e712",
+  "stop": {
+    "evidence_refs": [
+      {
+        "checker_id": "fixture-local",
+        "id": "e0c96e2890143da2be594243279b43ab279e983022873ac14bf242ce04ce3507",
+        "kind": "fence",
+        "sha256": "e0c96e2890143da2be594243279b43ab279e983022873ac14bf242ce04ce3507"
+      }
+    ],
+    "kind": "not_started_target_confirmed"
+  },
+  "target_id": "fixture-local",
+  "target_incarnation": "00000000-0000-4000-8000-000000000001"
+}

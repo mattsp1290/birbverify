@@ -1,0 +1,80 @@
+{
+  "authorization": {
+    "admission_target_incarnation": "00000000-0000-4000-8000-000000000001",
+    "closure_actor": "fixture-supervisor",
+    "grant_reference": "fixture-closure-grant",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "principal": "fixture-owner",
+    "workflow": "forge-fixture"
+  },
+  "closure_id": "00000000-0000-4000-8000-000000000002",
+  "contract_version": "birbverify.closure.v1",
+  "expected_attempt_id": null,
+  "expected_execution_epoch": null,
+  "reason": "dispatch_unknown",
+  "request": {
+    "authority": {
+      "environment": "fixture-local",
+      "permitted_operations": [
+        "fixture.apply",
+        "fixture.reset"
+      ],
+      "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+      "principal": "fixture-owner",
+      "workflow": "forge-fixture"
+    },
+    "candidate": {
+      "artifact_sha256": null,
+      "base": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "kind": "head",
+      "pr_head": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "repository": "fixture"
+    },
+    "components": [
+      "fixture-counter"
+    ],
+    "contract_version": "birbverify.v1",
+    "correlation_id": "correlation-example",
+    "evidence": {
+      "classification": "private",
+      "retention": "fixture-local-until-owner-deletes-v1",
+      "telemetry_correlation": "trace-example"
+    },
+    "goal_id": "goal-example",
+    "idempotency_key": "submission-example",
+    "plan": {
+      "checks": [
+        {
+          "assertion": "r\u00e9sultat attendu \u2713",
+          "id": "value-check",
+          "procedure_path": "check.py",
+          "procedure_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "procedure_sha256": "a95dc808a31adc908dedc93f192be34d1b532271c942ed02dc2384adc8e25174",
+          "required_artifacts": [
+            "observation",
+            "command"
+          ]
+        }
+      ],
+      "cleanup": "fixture-reset-v1",
+      "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "plan_sha256": "925f1dfce1994688ef7b00e540cb217bedc4ef837604ce857c87f0600fb34c32",
+    "pull_request": "pr-1",
+    "request_id": "request-example",
+    "resources": {
+      "capabilities": [
+        "linux-docker"
+      ],
+      "deadline": "2030-01-01T00:00:00Z",
+      "fixture": "isolated-counter-v1",
+      "max_attempts": 1,
+      "timeout_seconds": 10
+    },
+    "revision_method": "git-archive-and-target-receipt-v1"
+  },
+  "request_sha256": "784d4616ac9488113f6514147904a3f48155e6bdddaf0180ca3f2b1bcc70827e",
+  "target_id": "fixture-local",
+  "target_incarnation": "00000000-0000-4000-8000-000000000001"
+}

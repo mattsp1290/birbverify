@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+umask 077
+: "${BIRBVERIFY_WORKER_IMAGE:?Set an immutable local worker image ID}"
+: "${BIRBVERIFY_SOURCE_REVISION:?Set the exact reviewed source commit}"
+: "${BIRBVERIFY_CLOSURE_EVIDENCE:?Set a private evidence directory}"
+: "${BIRBVERIFY_FIXTURE_ROOT:?Set a short fresh shared Linux fixture root}"
+[ "$(uname -s)" = Linux ]
+[ -S /var/run/docker.sock ]
+[ -x .proof/bin/temporal ]
+[ -d "$BIRBVERIFY_FIXTURE_ROOT" ]
+uv run ruff check src tests scripts/export-closure scripts/record-closure-proof
+uv run ruff format --check src tests scripts/export-closure scripts/record-closure-proof
+mkdir -p "$BIRBVERIFY_CLOSURE_EVIDENCE"
+uv run python scripts/record-closure-proof start
+set +e
+env -i PATH="$PATH" HOME="$HOME" LANG=C.UTF-8 UV_CACHE_DIR="${UV_CACHE_DIR:-$HOME/.cache/uv}" \
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+  BIRBVERIFY_WORKER_IMAGE="$BIRBVERIFY_WORKER_IMAGE" \
+  BIRBVERIFY_SOURCE_REVISION="$BIRBVERIFY_SOURCE_REVISION" \
+  BIRBVERIFY_CLOSURE_EVIDENCE="$BIRBVERIFY_CLOSURE_EVIDENCE" \
+  BIRBVERIFY_SAFE_EVIDENCE="$BIRBVERIFY_CLOSURE_EVIDENCE/baseline" \
+  uv run pytest -p pytest_asyncio.plugin -q tests/test_contract.py tests/test_target.py \
+    tests/test_journeys.py tests/test_closure.py tests/test_closure_journeys.py \
+    --basetemp "$BIRBVERIFY_FIXTURE_ROOT/run-$$" \
+    --junitxml="$BIRBVERIFY_CLOSURE_EVIDENCE/junit.xml"
+
+result=$?
+set -e
+uv run python scripts/record-closure-proof finish "$result"
+exit "$result"

@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "data": {
+      "additionalProperties": true,
+      "title": "Data",
+      "type": "object"
+    },
+    "method": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Method",
+      "type": "string"
+    },
+    "protocol": {
+      "const": "birbverify.target.v2",
+      "title": "Protocol",
+      "type": "string"
+    },
+    "target_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Target Id",
+      "type": "string"
+    },
+    "target_incarnation": {
+      "format": "uuid",
+      "title": "Target Incarnation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "protocol",
+    "target_id",
+    "target_incarnation",
+    "method",
+    "data"
+  ],
+  "title": "Envelope",
+  "type": "object"
+}

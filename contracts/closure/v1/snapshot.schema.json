@@ -1,0 +1,1305 @@
+{
+  "$defs": {
+    "Acquired": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "acquired",
+          "default": "acquired",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reservation_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Reservation Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "reservation_sha256"
+      ],
+      "title": "Acquired",
+      "type": "object"
+    },
+    "AcquiredProvenanceUnavailable": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "acquired_provenance_unavailable",
+          "default": "acquired_provenance_unavailable",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reservation_sha256": {
+          "default": null,
+          "title": "Reservation Sha256",
+          "type": "null"
+        }
+      },
+      "required": [
+        "attempt_id"
+      ],
+      "title": "AcquiredProvenanceUnavailable",
+      "type": "object"
+    },
+    "Artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "classification": {
+          "const": "private",
+          "title": "Classification",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "observation",
+            "command"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "retention": {
+          "const": "fixture-local-until-owner-deletes-v1",
+          "title": "Retention",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size": {
+          "maximum": 65536,
+          "minimum": 0,
+          "title": "Size",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "size",
+        "sha256",
+        "captured_at",
+        "classification",
+        "retention"
+      ],
+      "title": "Artifact",
+      "type": "object"
+    },
+    "AttemptOwner": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "execution_epoch": {
+          "exclusiveMinimum": 0,
+          "title": "Execution Epoch",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "attempt",
+          "default": "attempt",
+          "title": "Kind",
+          "type": "string"
+        },
+        "request_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "execution_epoch",
+        "attempt_id"
+      ],
+      "title": "AttemptOwner",
+      "type": "object"
+    },
+    "Candidate": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Artifact Sha256"
+        },
+        "base": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Base",
+          "type": "string"
+        },
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Commit",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "head",
+            "integration"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "pr_head": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Pr Head",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Repository",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "commit",
+        "pr_head",
+        "base",
+        "kind"
+      ],
+      "title": "Candidate",
+      "type": "object"
+    },
+    "CheckRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/Artifact"
+          },
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "check_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Check Id",
+          "type": "string"
+        },
+        "duration_ms": {
+          "minimum": 0,
+          "title": "Duration Ms",
+          "type": "integer"
+        },
+        "observation": {
+          "maxLength": 1024,
+          "title": "Observation",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "passed",
+            "failed",
+            "not_run",
+            "inconclusive"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        }
+      },
+      "required": [
+        "check_id",
+        "outcome",
+        "observation",
+        "duration_ms",
+        "artifacts"
+      ],
+      "title": "CheckRecord",
+      "type": "object"
+    },
+    "Cleanup": {
+      "additionalProperties": false,
+      "properties": {
+        "no_op_reason": {
+          "anyOf": [
+            {
+              "const": "never_acquired",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "No Op Reason"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/OperationId"
+        },
+        "payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Payload Sha256",
+          "type": "string"
+        },
+        "procedure_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Procedure Sha256",
+          "type": "string"
+        },
+        "result_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Result Sha256",
+          "type": "string"
+        },
+        "status": {
+          "const": "complete",
+          "default": "complete",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "procedure_sha256",
+        "operation_id",
+        "payload_sha256",
+        "result_sha256",
+        "no_op_reason"
+      ],
+      "title": "Cleanup",
+      "type": "object"
+    },
+    "ClosureOwner": {
+      "additionalProperties": false,
+      "properties": {
+        "closure_id": {
+          "format": "uuid",
+          "title": "Closure Id",
+          "type": "string"
+        },
+        "execution_epoch": {
+          "exclusiveMinimum": 0,
+          "title": "Execution Epoch",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "closure",
+          "default": "closure",
+          "title": "Kind",
+          "type": "string"
+        },
+        "request_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "execution_epoch",
+        "closure_id"
+      ],
+      "title": "ClosureOwner",
+      "type": "object"
+    },
+    "ClosureReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "acquisition": {
+          "discriminator": {
+            "mapping": {
+              "acquired": "#/$defs/Acquired",
+              "never_acquired": "#/$defs/NeverAcquired"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/NeverAcquired"
+            },
+            {
+              "$ref": "#/$defs/Acquired"
+            }
+          ],
+          "title": "Acquisition"
+        },
+        "adapter_revision": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Adapter Revision",
+          "type": "string"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/Cleanup"
+        },
+        "closure_actor": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Closure Actor",
+          "type": "string"
+        },
+        "closure_id": {
+          "format": "uuid",
+          "title": "Closure Id",
+          "type": "string"
+        },
+        "command_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Command Sha256",
+          "type": "string"
+        },
+        "committed_at": {
+          "format": "date-time",
+          "title": "Committed At",
+          "type": "string"
+        },
+        "contract_version": {
+          "const": "birbverify.closure.v1",
+          "default": "birbverify.closure.v1",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "execution_epoch": {
+          "exclusiveMinimum": 0,
+          "title": "Execution Epoch",
+          "type": "integer"
+        },
+        "fence": {
+          "$ref": "#/$defs/Fence"
+        },
+        "grant_reference": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Grant Reference",
+          "type": "string"
+        },
+        "history": {
+          "discriminator": {
+            "mapping": {
+              "present": "#/$defs/PresentHistory",
+              "unavailable": "#/$defs/MissingHistory"
+            },
+            "propertyName": "manifest_status"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/PresentHistory"
+            },
+            {
+              "$ref": "#/$defs/MissingHistory"
+            }
+          ],
+          "title": "History"
+        },
+        "idempotency_key": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Idempotency Key",
+          "type": "string"
+        },
+        "policy_revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Policy Revision",
+          "type": "string"
+        },
+        "producer_revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Producer Revision",
+          "type": "string"
+        },
+        "receipt_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Receipt Sha256",
+          "type": "string"
+        },
+        "release": {
+          "$ref": "#/$defs/Release"
+        },
+        "request_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "stop": {
+          "discriminator": {
+            "mapping": {
+              "confirmed": "#/$defs/ConfirmedStop",
+              "not_started_target_confirmed": "#/$defs/NotStarted"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/NotStarted"
+            },
+            {
+              "$ref": "#/$defs/ConfirmedStop"
+            }
+          ],
+          "title": "Stop"
+        },
+        "target_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Target Id",
+          "type": "string"
+        },
+        "target_incarnation": {
+          "format": "uuid",
+          "title": "Target Incarnation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "producer_revision",
+        "adapter_revision",
+        "closure_actor",
+        "grant_reference",
+        "policy_revision",
+        "committed_at",
+        "closure_id",
+        "command_sha256",
+        "request_id",
+        "idempotency_key",
+        "request_sha256",
+        "target_id",
+        "target_incarnation",
+        "execution_epoch",
+        "acquisition",
+        "fence",
+        "stop",
+        "cleanup",
+        "history",
+        "release",
+        "receipt_sha256"
+      ],
+      "title": "ClosureReceipt",
+      "type": "object"
+    },
+    "ConfirmedStop": {
+      "additionalProperties": false,
+      "properties": {
+        "checker_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Checker Id",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "kind": {
+          "const": "confirmed",
+          "default": "confirmed",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "checker_id",
+        "evidence_refs"
+      ],
+      "title": "ConfirmedStop",
+      "type": "object"
+    },
+    "Environment": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{40}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Candidate"
+        },
+        "owner": {
+          "discriminator": {
+            "mapping": {
+              "attempt": "#/$defs/AttemptOwner",
+              "closure": "#/$defs/ClosureOwner",
+              "none": "#/$defs/NoOwner"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/NoOwner"
+            },
+            {
+              "$ref": "#/$defs/AttemptOwner"
+            },
+            {
+              "$ref": "#/$defs/ClosureOwner"
+            }
+          ],
+          "title": "Owner"
+        },
+        "state": {
+          "enum": [
+            "free",
+            "active",
+            "quarantined",
+            "revoked"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "state",
+        "owner",
+        "candidate",
+        "value"
+      ],
+      "title": "Environment",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "checker_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Checker Id",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "fence",
+            "daemon",
+            "stop",
+            "registration",
+            "restore"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sha256",
+        "kind",
+        "checker_id"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    },
+    "Fence": {
+      "additionalProperties": false,
+      "properties": {
+        "commit_revision": {
+          "exclusiveMinimum": 0,
+          "title": "Commit Revision",
+          "type": "integer"
+        },
+        "effect_history_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Effect History Sha256",
+          "type": "string"
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/EvidenceRef"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/OperationId"
+        },
+        "sealed_request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sealed Request Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation_id",
+        "commit_revision",
+        "sealed_request_sha256",
+        "effect_history_sha256",
+        "evidence_ref"
+      ],
+      "title": "Fence",
+      "type": "object"
+    },
+    "Manifest": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "attempt_number": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Attempt Number",
+          "type": "integer"
+        },
+        "cancellation": {
+          "enum": [
+            "none",
+            "requested",
+            "acknowledged"
+          ],
+          "title": "Cancellation",
+          "type": "string"
+        },
+        "candidate": {
+          "$ref": "#/$defs/Candidate"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/CheckRecord"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "cleanup": {
+          "enum": [
+            "complete",
+            "failed",
+            "unknown"
+          ],
+          "title": "Cleanup",
+          "type": "string"
+        },
+        "contract_version": {
+          "const": "birbverify.v1",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "correlation_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Correlation Id",
+          "type": "string"
+        },
+        "environment": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Environment",
+          "type": "string"
+        },
+        "environment_release": {
+          "enum": [
+            "released",
+            "retained",
+            "quarantined"
+          ],
+          "title": "Environment Release",
+          "type": "string"
+        },
+        "finished_at": {
+          "format": "date-time",
+          "title": "Finished At",
+          "type": "string"
+        },
+        "observed_after": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{40}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed After"
+        },
+        "observed_before": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{40}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Observed Before"
+        },
+        "operation_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "operation_reconciled": {
+          "title": "Operation Reconciled",
+          "type": "boolean"
+        },
+        "outcome": {
+          "enum": [
+            "passed",
+            "failed",
+            "inconclusive",
+            "cancelled",
+            "superseded"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "plan_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Plan Sha256",
+          "type": "string"
+        },
+        "policy_revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Policy Revision",
+          "type": "string"
+        },
+        "prior_attempt_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prior Attempt Id"
+        },
+        "reason": {
+          "enum": [
+            "checks_completed",
+            "required_evidence_missing",
+            "infrastructure_error",
+            "worker_lost",
+            "cancellation_acknowledged",
+            "termination_unknown"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "request_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "retry_reason": {
+          "enum": [
+            "initial",
+            "infrastructure_recovery"
+          ],
+          "title": "Retry Reason",
+          "type": "string"
+        },
+        "started_at": {
+          "format": "date-time",
+          "title": "Started At",
+          "type": "string"
+        },
+        "telemetry_correlation": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Telemetry Correlation",
+          "type": "string"
+        },
+        "termination": {
+          "enum": [
+            "confirmed",
+            "unknown"
+          ],
+          "title": "Termination",
+          "type": "string"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        },
+        "worker_capabilities": {
+          "items": {
+            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+            "type": "string"
+          },
+          "title": "Worker Capabilities",
+          "type": "array"
+        },
+        "worker_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Worker Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "contract_version",
+        "request_id",
+        "request_sha256",
+        "attempt_id",
+        "attempt_number",
+        "retry_reason",
+        "prior_attempt_id",
+        "correlation_id",
+        "telemetry_correlation",
+        "candidate",
+        "plan_sha256",
+        "policy_revision",
+        "environment",
+        "worker_id",
+        "worker_capabilities",
+        "tools",
+        "started_at",
+        "finished_at",
+        "observed_before",
+        "observed_after",
+        "checks",
+        "operation_id",
+        "operation_reconciled",
+        "outcome",
+        "cleanup",
+        "cancellation",
+        "termination",
+        "environment_release",
+        "reason"
+      ],
+      "title": "Manifest",
+      "type": "object"
+    },
+    "MissingHistory": {
+      "additionalProperties": false,
+      "properties": {
+        "manifest_sha256": {
+          "default": null,
+          "title": "Manifest Sha256",
+          "type": "null"
+        },
+        "manifest_status": {
+          "const": "unavailable",
+          "default": "unavailable",
+          "title": "Manifest Status",
+          "type": "string"
+        }
+      },
+      "title": "MissingHistory",
+      "type": "object"
+    },
+    "NeverAcquired": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "default": null,
+          "title": "Attempt Id",
+          "type": "null"
+        },
+        "kind": {
+          "const": "never_acquired",
+          "default": "never_acquired",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reservation_sha256": {
+          "default": null,
+          "title": "Reservation Sha256",
+          "type": "null"
+        }
+      },
+      "title": "NeverAcquired",
+      "type": "object"
+    },
+    "NoOwner": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "none",
+          "default": "none",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "title": "NoOwner",
+      "type": "object"
+    },
+    "NotStarted": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_refs": {
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 1,
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "kind": {
+          "const": "not_started_target_confirmed",
+          "default": "not_started_target_confirmed",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_refs"
+      ],
+      "title": "NotStarted",
+      "type": "object"
+    },
+    "OperationId": {
+      "additionalProperties": false,
+      "properties": {
+        "closure_id": {
+          "format": "uuid",
+          "title": "Closure Id",
+          "type": "string"
+        },
+        "step": {
+          "enum": [
+            "fence",
+            "stop",
+            "cleanup",
+            "release"
+          ],
+          "title": "Step",
+          "type": "string"
+        },
+        "target_incarnation": {
+          "format": "uuid",
+          "title": "Target Incarnation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_incarnation",
+        "closure_id",
+        "step"
+      ],
+      "title": "OperationId",
+      "type": "object"
+    },
+    "PresentHistory": {
+      "additionalProperties": false,
+      "properties": {
+        "manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Manifest Sha256",
+          "type": "string"
+        },
+        "manifest_status": {
+          "const": "present",
+          "default": "present",
+          "title": "Manifest Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "manifest_sha256"
+      ],
+      "title": "PresentHistory",
+      "type": "object"
+    },
+    "Progress": {
+      "additionalProperties": false,
+      "properties": {
+        "acquisition": {
+          "discriminator": {
+            "mapping": {
+              "acquired": "#/$defs/Acquired",
+              "acquired_provenance_unavailable": "#/$defs/AcquiredProvenanceUnavailable",
+              "never_acquired": "#/$defs/NeverAcquired"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/NeverAcquired"
+            },
+            {
+              "$ref": "#/$defs/Acquired"
+            },
+            {
+              "$ref": "#/$defs/AcquiredProvenanceUnavailable"
+            }
+          ],
+          "title": "Acquisition"
+        },
+        "blocking_reason": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Blocking Reason"
+        },
+        "cleanup": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Cleanup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "closure_id": {
+          "format": "uuid",
+          "title": "Closure Id",
+          "type": "string"
+        },
+        "execution_epoch": {
+          "exclusiveMinimum": 0,
+          "title": "Execution Epoch",
+          "type": "integer"
+        },
+        "fence": {
+          "$ref": "#/$defs/Fence"
+        },
+        "phase": {
+          "enum": [
+            "fenced_stop_unknown",
+            "fenced_cleanup_unknown",
+            "release_confirmed"
+          ],
+          "title": "Phase",
+          "type": "string"
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ClosureReceipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stop": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "confirmed": "#/$defs/ConfirmedStop",
+                  "not_started_target_confirmed": "#/$defs/NotStarted"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/NotStarted"
+                },
+                {
+                  "$ref": "#/$defs/ConfirmedStop"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stop"
+        }
+      },
+      "required": [
+        "closure_id",
+        "execution_epoch",
+        "acquisition",
+        "phase",
+        "blocking_reason",
+        "fence",
+        "stop",
+        "cleanup",
+        "receipt"
+      ],
+      "title": "Progress",
+      "type": "object"
+    },
+    "Release": {
+      "additionalProperties": false,
+      "properties": {
+        "environment_revision": {
+          "exclusiveMinimum": 0,
+          "title": "Environment Revision",
+          "type": "integer"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/OperationId"
+        },
+        "status": {
+          "const": "release_confirmed",
+          "default": "release_confirmed",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation_id",
+        "environment_revision"
+      ],
+      "title": "Release",
+      "type": "object"
+    },
+    "RequestObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "closure": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Progress"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_epoch": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Execution Epoch"
+        },
+        "manifest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Manifest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "request_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Request Sha256"
+        },
+        "terminal": {
+          "anyOf": [
+            {
+              "enum": [
+                "verification",
+                "closed_without_verification"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Terminal"
+        }
+      },
+      "required": [
+        "request_id",
+        "request_sha256",
+        "execution_epoch",
+        "manifest",
+        "closure",
+        "terminal"
+      ],
+      "title": "RequestObservation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "birbverify.closure.v1",
+      "default": "birbverify.closure.v1",
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "environment": {
+      "$ref": "#/$defs/Environment"
+    },
+    "record_revision": {
+      "minimum": 0,
+      "title": "Record Revision",
+      "type": "integer"
+    },
+    "requests": {
+      "items": {
+        "$ref": "#/$defs/RequestObservation"
+      },
+      "title": "Requests",
+      "type": "array"
+    },
+    "target_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Target Id",
+      "type": "string"
+    },
+    "target_incarnation": {
+      "format": "uuid",
+      "title": "Target Incarnation",
+      "type": "string"
+    }
+  },
+  "required": [
+    "target_id",
+    "target_incarnation",
+    "record_revision",
+    "requests",
+    "environment"
+  ],
+  "title": "Snapshot",
+  "type": "object"
+}
