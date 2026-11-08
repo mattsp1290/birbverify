@@ -1,0 +1,93 @@
+{
+  "status": "PASS documentation handoff only",
+  "review_mode": "independent Claude CLI subscription, supplied-source review; tools disabled",
+  "cli_version": "2.1.312",
+  "auth_method": "claude.ai",
+  "requested_model_alias": "opus",
+  "actual_model": "claude-opus-5-5",
+  "producer_source_revision": "a70315a276837ffdde32049fdb77670a3468e151",
+  "consumer_source_revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+  "runtime_acceptance": "NOT VERIFIED",
+  "proposed_experiments_executed": false,
+  "rounds": [
+    {
+      "round": 1,
+      "actual_models": [
+        "claude-opus-5-5"
+      ],
+      "verdict": "revise: three blocking findings",
+      "input_sha256": "99c87d8879dffef41718da92a67ac03c6be067216a3149a7ba75ff627067f1bc",
+      "output_sha256": "8f6ba869b8b6274a4db06fd60329af833c3fe040c3148bbb7447d003a3af019c"
+    },
+    {
+      "round": 2,
+      "actual_models": [
+        "claude-opus-5-5"
+      ],
+      "verdict": "core design acceptable; restore-history correction required",
+      "input_sha256": "fbe68b2449737e3ffea25435f9ff870a11fcb7be42d3475d632ef9047f6669c3",
+      "output_sha256": "a5a6fe95728eeb8ebe3841386206510a9b92fd007f85d233bd8313bc2fc7bb6e"
+    },
+    {
+      "round": 3,
+      "actual_models": [
+        "claude-opus-5-5"
+      ],
+      "verdict": "PASS for documentation handoff; three nonblocking clarifications",
+      "input_sha256": "c573d21776505a932dc7b77e38d856b2d1a81784d930681f0ac97cf444ae051e",
+      "output_sha256": "1a028b8a97c8f40605764065c5c22a9f41e02f91292ea1340f3ba49555e79f8f"
+    },
+    {
+      "round": 4,
+      "actual_models": [
+        "claude-opus-5-5"
+      ],
+      "verdict": "PASS for final clarification delta",
+      "input_sha256": "501b2642547215df45e65c4f2327912332e79dd4c17f07ff1290019767d0f217",
+      "output_sha256": "e8c10a0317ac3ab10b6114a5f00ac927ea89961533dcf5618e8f253982f26417"
+    }
+  ],
+  "reviewed_documents": [
+    {
+      "path": "docs/proposals/contextless-closure/README.md",
+      "sha256": "05f5e7724ed35a73f5662967b978a4be5f4633a6610839054be0885ccb57ec26"
+    },
+    {
+      "path": "docs/proposals/contextless-closure/design.md",
+      "sha256": "ebca40b7a16b26933537c5eac20e0fdec52223fd7fa9d4c0482b6f742d635f37"
+    },
+    {
+      "path": "docs/proposals/contextless-closure/contract.md",
+      "sha256": "b5fa54dc35b54e83494235146b9ec1456980016572428763914eba82119a6f93"
+    },
+    {
+      "path": "docs/proposals/contextless-closure/failure-matrix.md",
+      "sha256": "72aeb65d66922ad3239344b837c1125857ba2afbdae67921ca546de1a44cfeef"
+    },
+    {
+      "path": "docs/proposals/contextless-closure/consumer-handoff.md",
+      "sha256": "b22c558730e3398f4fed4d64a3314a96cd781e82feb897b6b2e11817028d6ab7"
+    },
+    {
+      "path": "docs/proposals/contextless-closure/source-evidence.json",
+      "sha256": "eb6c68ce777502375272a62f22b2b53ec99a0bc2f99df87cf4ede4f057c510f1"
+    }
+  ],
+  "excluded_publication_metadata": [
+    "docs/proposals/contextless-closure/review.md",
+    "docs/proposals/contextless-closure/review-evidence.json"
+  ],
+  "owner_checks": [
+    "exact pinned Git source digest comparison",
+    "protected checkout HEAD/status/tracked-file hashes",
+    "local Markdown links",
+    "privacy pattern and whitespace scans",
+    "documentation-only scope"
+  ],
+  "limits": [
+    "Reviewer did not run tools, recompute hashes, inspect the repositories independently, or execute tests.",
+    "No full conversation transcript was supplied for the decision-trail audit.",
+    "All 29 failure scenarios and the silent-rollback counterexample remain proposed experiments.",
+    "Receiving-owner acceptance remains outstanding; birbforge-s0sc stays open."
+  ]
+}

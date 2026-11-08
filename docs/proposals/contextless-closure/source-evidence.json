@@ -1,0 +1,162 @@
+{
+  "status": "source-only investigation",
+  "runtime_acceptance": "NOT VERIFIED",
+  "sources": [
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "README.md",
+      "sha256": "f7735177b9cede56cc5f9fd65fb43c6a2eba813b7737eb349c4d4bc8f605ee71"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "docs/first-milestone.md",
+      "sha256": "a9ca4f0c4ecaf2411c059e3022617614ae525ffc55f69573af06aa3ebf072615"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "docs/contract.md",
+      "sha256": "378a2587cf775d6384b86db59e2b3c3278c57f7d00c6d1a5489b2f7825ee579c"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "docs/architecture.md",
+      "sha256": "e565d4c334ab27341cd15ef7abd6fa10a823d31808515e08610db466f0a3c58d"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "docs/deployment-handoff.md",
+      "sha256": "48cb5f03d47900b481d2facc301b117751346585367a3c9a590108a93b1aa44c"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/target.py",
+      "sha256": "c4ed0558334e87ab477dd5706ba32820c1226971edc9bd31b3f00932588cb2c6"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/runner.py",
+      "sha256": "b9c97fefd85243ac8e5cdeca2f2c0124dd6398a188963b88741580a1aa5b1ee1"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/temporal_worker.py",
+      "sha256": "b5388fcfc70e3819e1dad17e8c473e79f31cb086398ee49be6fa98a2e949fce8"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/fixture.py",
+      "sha256": "c4187da7446df7a6372fcc88e15a7214f8d4b528308243b0c67111c5074dd196"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/policy.py",
+      "sha256": "a8deed4616a11dccb3f13288ecd337cf2f85e73158025d4d7aa67ebfd474ef02"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/contract.py",
+      "sha256": "925b71c82f27b2c3063ba2c3f786d1ec7b5b18ff98c5dea787b5f709f4e43617"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "tests/test_target.py",
+      "sha256": "826282abe171da005d7ea5f9557364bd26e01043238361329474b93ae8b908dd"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "tests/test_journeys.py",
+      "sha256": "8738eecc9879be456efb49a551019a51e7839e79d193e094512e550e25eeb4ca"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "verification/workflow.py",
+      "sha256": "18f1f51eae9653a30f0e3febf7515687d751094967b53617f6e23555cf636685"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "verification/producer.py",
+      "sha256": "9170d038ab7f361944955af50af00a0b9914af26a730a1d543b88ac9644b53ca"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "verification/supervisor.py",
+      "sha256": "0b290c141e8111fa6642d21e7458353edbd22df4237dda35109bf1ef149ee2d7"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "verification/model.py",
+      "sha256": "2b4d491a3c5657576942356b9f96b23fd17b1b939ecad80dd56a93937780f89f"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "tests/verification_python/test_queue.py",
+      "sha256": "cda4adf97ca86fa68f3707b940ac2219cae2212a8ecd4e7d533394022f1f21a2"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "tests/verification_python/test_temporal.py",
+      "sha256": "609a0d4fd6febdd7ab19a2d9443deb9be1c7cb55a71ec426541780e185855ac1"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "tests/test_contract.py",
+      "sha256": "eb277ba382d8b6f0761afe27e2801784a2cd8a3b5b4ab9ef57490fd97a2323a5"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/projection.py",
+      "sha256": "861cc613a9373e24f617222176a572ce2de5a177d360112f87b07c698dbb5c0c"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "src/birbverify/stale_probe.py",
+      "sha256": "95b93ae090059016c026ac9de2399fb369ec7c9a83f43548c70f255442ccad9b"
+    },
+    {
+      "repository": "birbverify",
+      "revision": "a70315a276837ffdde32049fdb77670a3468e151",
+      "path": "docs/verification.md",
+      "sha256": "ca4c03d4484741ee5c64a351afdb80c36da7304f3ec5d16b99f740407c9d4933"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "verification/adapter.py",
+      "sha256": "38b867fb1449dd03c6170c39a04c3a5b5f7fd3ca2ac02b26e93d124a12d57b2e"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "verification/diagnostics.py",
+      "sha256": "e354e76f607a5969da9e294b36302457e769a29b7fdeb86ece44928b8089dba9"
+    },
+    {
+      "repository": "birbforge",
+      "revision": "6b46dac2931225e0739e9deb047e48b956bff8fc",
+      "path": "verification/__main__.py",
+      "sha256": "db1ac0e9e6d3874b178f1f0a212bb531a2e98e69760fc03988caf458bbf11bcb"
+    }
+  ]
+}
