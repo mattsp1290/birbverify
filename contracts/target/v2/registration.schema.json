@@ -1,0 +1,134 @@
+{
+  "$defs": {
+    "ContainerGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "config_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Config Sha256",
+          "type": "string"
+        },
+        "container_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Container Id",
+          "type": "string"
+        },
+        "daemon_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Daemon Id",
+          "type": "string"
+        },
+        "host_boot_id": {
+          "format": "uuid",
+          "title": "Host Boot Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "docker_container",
+          "default": "docker_container",
+          "title": "Kind",
+          "type": "string"
+        },
+        "worker_pid": {
+          "exclusiveMinimum": 0,
+          "title": "Worker Pid",
+          "type": "integer"
+        },
+        "worker_start_ticks": {
+          "exclusiveMinimum": 0,
+          "title": "Worker Start Ticks",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "daemon_id",
+        "host_boot_id",
+        "container_id",
+        "worker_pid",
+        "worker_start_ticks",
+        "config_sha256"
+      ],
+      "title": "ContainerGroup",
+      "type": "object"
+    },
+    "EvidenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "checker_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Checker Id",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "fence",
+            "daemon",
+            "stop",
+            "registration",
+            "restore"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sha256",
+        "kind",
+        "checker_id"
+      ],
+      "title": "EvidenceRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "evidence_ref": {
+      "$ref": "#/$defs/EvidenceRef"
+    },
+    "group": {
+      "$ref": "#/$defs/ContainerGroup"
+    },
+    "launcher_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Launcher Id",
+      "type": "string"
+    },
+    "target_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Target Id",
+      "type": "string"
+    },
+    "target_incarnation": {
+      "format": "uuid",
+      "title": "Target Incarnation",
+      "type": "string"
+    },
+    "worker_execution_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Worker Execution Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "worker_execution_id",
+    "target_id",
+    "target_incarnation",
+    "launcher_id",
+    "group",
+    "evidence_ref"
+  ],
+  "title": "Registration",
+  "type": "object"
+}

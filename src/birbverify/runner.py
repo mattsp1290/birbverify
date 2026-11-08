@@ -22,6 +22,7 @@ from birbverify.contract import (
     digest,
     eligible,
 )
+from birbverify.lifecycle import GatedDocker, UnknownDelivery, container_path
 from birbverify.policy import CAPABILITIES, authorize
 from birbverify.target import TargetError, rpc
 
@@ -67,6 +68,20 @@ class Runner:
     def __init__(self, root: Path):
         self.root = root
         self.config = json.loads((root / "installation.json").read_text())
+        self.binding = None
+        self.registration = None
+        if self.config.get("closure_binding"):
+            launch_path = os.environ.get("BIRBVERIFY_LAUNCH")
+            if not launch_path:
+                raise ValueError("launcher_binding_required")
+            launch = json.loads(Path(launch_path).read_text())
+            self.binding = launch["binding"]
+            self.registration = launch["registration"]
+            if self.binding != self.config["closure_binding"]:
+                raise ValueError("launcher_binding_mismatch")
+
+    def call(self, method, **data):
+        return rpc(self.root, method, binding=self.binding, **data)
 
     def validate(self, request: Request):
         authorize(request, self.config)
@@ -202,6 +217,8 @@ class Runner:
     async def check(
         self, request: Request, attempt_id: str, directory: Path, owner: dict, state: ExecutionState
     ):
+        if self.binding:
+            return await self.closure_check(request, attempt_id, directory, owner, state)
         name = f"birbverify-{attempt_id}"
         state.stopped = False
         creation_settled = False
@@ -246,7 +263,7 @@ class Runner:
                 raise asyncio.CancelledError
             if code:
                 raise RuntimeError("container_create_failed")
-            rpc(self.root, "assert_active", **owner)
+            self.call("assert_active", **owner)
             seconds = min(
                 request.resources.timeout_seconds,
                 max(0.01, (request.resources.deadline - now()).total_seconds()),
@@ -282,8 +299,129 @@ class Runner:
             if state.cancellation_requested:
                 raise asyncio.CancelledError
 
+    async def closure_check(self, request, attempt_id, directory, owner, state):
+        import base64
+        import struct
+
+        name = f"birbverify-{attempt_id}"
+        controls = GatedDocker(
+            self.root,
+            self.call,
+            request.request_id,
+            owner["execution_epoch"],
+            attempt_id,
+            self.registration,
+            owner=owner,
+        )
+        body = {
+            "Image": IMAGE,
+            "Cmd": ["python", "-I", "-S", "/candidate/check.py"],
+            "User": "65534:65534",
+            "AttachStdout": True,
+            "AttachStderr": True,
+            "Labels": {
+                "birbverify.attempt": attempt_id,
+                "birbverify.incarnation": self.binding["target_incarnation"],
+                "birbverify.worker_execution": self.registration["worker_execution_id"],
+                "proof": "contextless-20261108",
+            },
+            "HostConfig": {
+                "Binds": [f"{directory}:/candidate:ro"],
+                "NetworkMode": "none",
+                "ReadonlyRootfs": True,
+                "CapDrop": ["ALL"],
+                "SecurityOpt": ["no-new-privileges"],
+                "PidsLimit": 32,
+                "Memory": 134217728,
+                "NanoCpus": 1000000000,
+                "LogConfig": {"Type": "json-file", "Config": {"max-size": "64k", "max-file": "1"}},
+            },
+        }
+        state.stopped = False
+
+        async def command(suffix, verb, method, path, payload=None):
+            task = asyncio.create_task(
+                controls.async_command(
+                    attempt_id + "." + suffix,
+                    verb,
+                    name,
+                    method,
+                    path,
+                    payload,
+                )
+            )
+            result = await settle(task, state)
+            if state.cancellation_requested:
+                raise asyncio.CancelledError
+            return result
+
+        try:
+            response = await command(
+                "create", "create", "POST", "/containers/create?name=" + name, body
+            )
+            if response["status"] != 201:
+                raise RuntimeError("container_create_failed")
+            response = await command("start", "start", "POST", container_path(name) + "/start")
+            if response["status"] != 204:
+                raise RuntimeError("container_start_failed")
+            response = await command(
+                "wait", "wait", "POST", container_path(name) + "/wait?condition=not-running"
+            )
+            status = json.loads(base64.b64decode(response["body_base64"]))
+            exit_code = status["StatusCode"]
+            if exit_code not in {0, 1}:
+                raise RuntimeError("procedure_infrastructure_error")
+            response = await command(
+                "logs", "logs", "GET", container_path(name) + "/logs?stdout=true&stderr=true"
+            )
+            raw = base64.b64decode(response["body_base64"])
+            output = b""
+            while raw:
+                if len(raw) < 8:
+                    raise RuntimeError("truncated_container_output")
+                size = struct.unpack(">I", raw[4:8])[0]
+                if len(raw) < 8 + size:
+                    raise RuntimeError("truncated_container_output")
+                output += raw[8 : 8 + size]
+                raw = raw[8 + size :]
+            observation = json.loads(output)
+            if observation.get("passed") is not (exit_code == 0):
+                raise RuntimeError("invalid_procedure_observation")
+            return exit_code, output
+        finally:
+            try:
+                task = asyncio.create_task(
+                    controls.async_command(
+                        attempt_id + ".remove",
+                        "remove",
+                        name,
+                        "DELETE",
+                        container_path(name) + "?force=true",
+                    )
+                )
+                await settle(task, state)
+                task = asyncio.create_task(
+                    controls.async_command(
+                        attempt_id + ".absent",
+                        "inspect",
+                        name,
+                        "GET",
+                        container_path(name) + "/json",
+                    )
+                )
+                absent = await settle(task, state)
+                state.stopped = absent["status"] == 404
+            except (TargetError, UnknownDelivery, OSError):
+                state.stopped = False
+            if state.cancellation_requested:
+                raise asyncio.CancelledError
+
+    def context_path(self, attempt_id):
+        directory = self.root / "contexts" if self.binding else self.root
+        return directory / f"{attempt_id}.context.json"
+
     def context(self, attempt_id):
-        return json.loads((self.root / f"{attempt_id}.context.json").read_text())
+        return json.loads(self.context_path(attempt_id).read_text())
 
     def finalize(
         self,
@@ -299,9 +437,9 @@ class Runner:
         reason=None,
     ):
         owner = context["owner"]
-        environment = rpc(self.root, "inspect")["environment"]
+        environment = self.call("inspect")["environment"]
         after = environment["candidate"]
-        previous = rpc(self.root, "snapshot", attempt_id=owner["attempt_id"])
+        previous = self.call("snapshot", attempt_id=owner["attempt_id"])
         if previous and previous["manifest"]:
             return Manifest.model_validate_json(previous["manifest"])
         if environment["state"] == "quarantined":
@@ -313,10 +451,10 @@ class Runner:
         elif outcome == "passed" and environment["state"] != "active":
             outcome = "inconclusive"
         if termination == "confirmed":
-            rpc(self.root, "stop", **owner)
-            rpc(self.root, "cleanup", **owner)
+            self.call("stop", **owner)
+            self.call("cleanup", **owner)
         else:
-            rpc(self.root, "uncertain", **owner)
+            self.call("uncertain", **owner)
         existing = {check.check_id for check in checks}
         checks.extend(
             CheckRecord(
@@ -381,15 +519,14 @@ class Runner:
                 update={"outcome": "inconclusive", "reason": "required_evidence_missing"}
             )
         try:
-            rpc(
-                self.root,
+            self.call(
                 "finish",
                 **owner,
                 manifest=result.model_dump(mode="json"),
                 lose_reply=request.request_id in self.config.get("lose_finish_reply", []),
             )
         except (ValueError, OSError):
-            committed = rpc(self.root, "result", request_id=request.request_id)
+            committed = self.call("result", request_id=request.request_id)
             if committed is None:
                 raise RuntimeError("manifest_commit_unknown") from None
             result = Manifest.model_validate(committed)
@@ -400,18 +537,46 @@ class Runner:
         request = Request.model_validate(payload)
         TypeAdapter(Id).validate_python(attempt_id)
         self.validate(request)
-        rpc(self.root, "admit", request=payload)
-        prior = rpc(self.root, "result", request_id=request.request_id)
+        admission = self.call(
+            "admit",
+            request=payload,
+            **(
+                {
+                    "admission_target_incarnation": self.binding["target_incarnation"],
+                }
+                if self.binding
+                else {}
+            ),
+        )
+        reservation_binding = (
+            {
+                "execution_epoch": admission["execution_epoch"],
+                "worker_execution_id": self.registration["worker_execution_id"],
+            }
+            if self.binding
+            else {}
+        )
+        prior = self.call("result", request_id=request.request_id)
         if prior:
             return Manifest.model_validate(prior).model_dump(mode="json")
-        reservation = rpc(
-            self.root, "reserve", request_id=request.request_id, attempt_id=attempt_id
+        reservation = self.call(
+            "reserve", request_id=request.request_id, attempt_id=attempt_id, **reservation_binding
         )
         if reservation.get("busy"):
             raise Busy("environment_wait")
         if "result" in reservation:
             return reservation["result"]
         owner = {"attempt_id": attempt_id, "token": reservation["token"]}
+        if self.binding:
+            owner["execution_epoch"] = reservation["execution_epoch"]
+        if self.binding and self.config.get("fixture_pause_before_context"):
+            (self.root / "launch" / "reserved.ready").touch()
+            until = time.monotonic() + 30
+            while not (self.root / "launch" / "reserved.continue").exists():
+                if time.monotonic() >= until:
+                    raise RuntimeError("fixture_barrier_timeout")
+                heartbeat()
+                await asyncio.sleep(0.025)
         context = {
             "owner": owner,
             "attempt_number": reservation["attempt_number"],
@@ -422,7 +587,7 @@ class Runner:
             else "infrastructure_recovery",
             "prior_attempt_id": reservation["prior_attempt_id"],
         }
-        (self.root / f"{attempt_id}.context.json").write_text(json.dumps(context))
+        self.context_path(attempt_id).write_text(json.dumps(context))
         self.diagnostic(request, attempt_id, "running")
         operation = {
             **owner,
@@ -439,26 +604,25 @@ class Runner:
         before = None
         try:
             directory = self.prepare(request, attempt_id)
-            receipt = rpc(self.root, "receipt", **operation)
+            receipt = self.call("receipt", **operation)
             reconciled = receipt is not None
             if reconciled:
                 self.diagnostic(request, attempt_id, "operation_reconciled")
             else:
                 try:
-                    receipt = rpc(
-                        self.root,
+                    receipt = self.call(
                         "apply",
                         **operation,
                         lose_reply=request.request_id
                         in self.config.get("lose_operation_reply", []),
                     )
                 except (ValueError, OSError):
-                    receipt = rpc(self.root, "receipt", **operation)
+                    receipt = self.call("receipt", **operation)
                     if receipt is None:
                         raise RuntimeError("operation_result_unknown") from None
                     reconciled = True
                     self.diagnostic(request, attempt_id, "operation_reconciled")
-            before = rpc(self.root, "inspect")["environment"]["candidate"]
+            before = self.call("inspect")["environment"]["candidate"]
             if before != receipt["candidate"]:
                 raise RuntimeError("receipt_target_mismatch")
             if request.request_id in self.config.get("pause_after_effect", []):
@@ -502,7 +666,7 @@ class Runner:
             ).model_dump(mode="json")
         except asyncio.CancelledError:
             self.diagnostic(request, attempt_id, "cancel_requested")
-            rpc(self.root, "cancel", **owner)
+            self.call("cancel", **owner)
             return self.finalize(
                 request,
                 context,
@@ -514,10 +678,12 @@ class Runner:
                 before=before,
             ).model_dump(mode="json")
         except (RuntimeError, ValueError, OSError, TimeoutError, TargetError, KeyError) as error:
+            if isinstance(error, TargetError) and str(error) == "request_closed":
+                raise
             (self.root / f"{attempt_id}.error.txt").write_text(repr(error))
             self.diagnostic(request, attempt_id, "infrastructure_uncertain")
             if state.cancellation_requested:
-                rpc(self.root, "cancel", **owner)
+                self.call("cancel", **owner)
             return self.finalize(
                 request,
                 context,

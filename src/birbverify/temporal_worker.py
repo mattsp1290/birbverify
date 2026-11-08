@@ -98,7 +98,11 @@ class Activities:
                 "environment_wait", type="EnvironmentBusy", non_retryable=True
             ) from error
         except (ValueError, TargetError) as error:
-            raise ApplicationError(str(error), non_retryable=True) from error
+            raise ApplicationError(
+                str(error),
+                type="RequestClosed" if str(error) == "request_closed" else "VerificationRejected",
+                non_retryable=True,
+            ) from error
         finally:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)

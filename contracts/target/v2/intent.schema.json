@@ -1,0 +1,133 @@
+{
+  "$defs": {
+    "HttpCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "body": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Body"
+        },
+        "method": {
+          "enum": [
+            "GET",
+            "POST",
+            "DELETE"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "path",
+        "body"
+      ],
+      "title": "HttpCommand",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "arguments_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Arguments Sha256",
+      "type": "string"
+    },
+    "attempt_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "authority": {
+      "enum": [
+        "worker",
+        "closure"
+      ],
+      "title": "Authority",
+      "type": "string"
+    },
+    "closure_id": {
+      "anyOf": [
+        {
+          "format": "uuid",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Closure Id"
+    },
+    "command": {
+      "$ref": "#/$defs/HttpCommand"
+    },
+    "container": {
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "Container",
+      "type": "string"
+    },
+    "execution_epoch": {
+      "exclusiveMinimum": 0,
+      "title": "Execution Epoch",
+      "type": "integer"
+    },
+    "operation_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "verb": {
+      "enum": [
+        "create",
+        "start",
+        "remove",
+        "inspect",
+        "wait",
+        "logs",
+        "list"
+      ],
+      "title": "Verb",
+      "type": "string"
+    },
+    "worker_execution_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Worker Execution Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "operation_id",
+    "request_id",
+    "execution_epoch",
+    "attempt_id",
+    "worker_execution_id",
+    "authority",
+    "closure_id",
+    "verb",
+    "container",
+    "command",
+    "arguments_sha256"
+  ],
+  "title": "LifecycleIntent",
+  "type": "object"
+}

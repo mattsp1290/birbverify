@@ -2,6 +2,7 @@
 import hashlib
 import importlib.metadata
 import json
+import os
 import platform
 import subprocess
 import xml.etree.ElementTree as ET
@@ -9,7 +10,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
-evidence = root / "docs/evidence"
+evidence = Path(os.environ.get("BIRBVERIFY_SAFE_EVIDENCE", root / ".proof/evidence"))
+evidence.mkdir(mode=0o700, parents=True, exist_ok=True)
 junit = ET.parse(root / ".proof/junit.xml").getroot()
 suites = list(junit.iter("testsuite"))
 assert suites and sum(int(suite.get("tests", 0)) for suite in suites) >= 14
@@ -65,7 +67,7 @@ save(
     },
 )
 manifest = observations["candidate-evidence.json"]["pass"]
-(root / "contracts/v1/manifest.example.json").write_text(json.dumps(manifest, indent=2) + "\n")
+save("passing-manifest.json", manifest)
 save(
     "acceptance.json",
     {
