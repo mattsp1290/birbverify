@@ -366,7 +366,6 @@ class Runner:
                 max(0.01, (request.resources.deadline - now()).total_seconds()),
             )
             end = asyncio.get_running_loop().time() + seconds
-            controls.engine.timeout = seconds
             response = await command("start", "start", "POST", container_path(name) + "/start")
             if response["status"] != 204:
                 raise RuntimeError("container_start_failed")

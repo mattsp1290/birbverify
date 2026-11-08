@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 import uuid
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -620,6 +621,114 @@ def test_v2_check_timeout_is_inconclusive_and_releases_after_confirmed_absence(r
     candidate = "birbverify-" + r.request.request_id + ".attempt"
     assert r.engine.raw("GET", container_path(candidate) + "/json")[0] == 404
     publish("v2-check-timeout", {"manifest": result, "snapshot": r.snapshot()})
+
+
+@pytest.mark.parametrize("budget", ["procedure", "near-deadline"])
+def test_delayed_start_reply_settles_after_budget_and_releases(runtime, budget):
+    r = runtime
+    r.request = r.new_request("delayed-start-" + uuid.uuid4().hex[:12], timeout=1)
+    if budget == "near-deadline":
+        payload = r.request.model_dump(mode="json")
+        payload["resources"].update(
+            timeout_seconds=30,
+            deadline=(datetime.now(UTC) + timedelta(seconds=8)).isoformat(),
+        )
+        r.request = Request.model_validate(payload)
+    abort = threading.Event()
+    replied = threading.Event()
+    replies = []
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def handle_command(self):
+            length = int(self.headers.get("Content-Length", 0))
+            body = json.loads(self.rfile.read(length)) if length else None
+            status, response = Engine().raw(self.command, self.path, body)
+            if self.path.startswith("/containers/create") and budget == "near-deadline":
+                abort.wait(max(0, r.request.resources.deadline.timestamp() - time.time() - 1.0))
+            if self.path.endswith("/start"):
+                received = time.monotonic()
+                remaining_deadline = r.request.resources.deadline.timestamp() - time.time()
+                abort.wait(1.5)
+                replies.append(
+                    {
+                        "status": status,
+                        "held_seconds": time.monotonic() - received,
+                        "remaining_deadline_seconds": remaining_deadline,
+                    }
+                )
+                replied.set()
+            self.send_response(status)
+            self.send_header("Content-Length", str(len(response)))
+            try:
+                self.end_headers()
+                self.wfile.write(response)
+            except BrokenPipeError:
+                pass
+
+        do_GET = handle_command
+        do_POST = handle_command
+        do_DELETE = handle_command
+
+    path = r.root / "launch" / "delayed-start.sock"
+    server = DaemonGate(str(path), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    r.config["fixture_daemon_socket"] = str(path)
+    try:
+        r.start()
+        r.worker()
+        r.wait_file("worker-ended")
+        assert replied.wait(5)
+        result = r.call("result", request_id=r.request.request_id)
+        assert result is not None, (r.root / "launch" / "worker-error.json").read_text()
+        assert len(replies) == 1 and replies[0]["status"] == 204
+        assert replies[0]["held_seconds"] >= 1.5
+        if budget == "near-deadline":
+            assert replies[0]["remaining_deadline_seconds"] <= 1.0
+        assert result["outcome"] == "inconclusive"
+        records = r.call(
+            "lifecycle_records", request_id=r.request.request_id, recovery_key=r.supervisor.key
+        )
+        starts = [row for row in records if row["intent"]["verb"] == "start"]
+        assert len(starts) == 1 and starts[0]["settlement"] == "effect"
+        assert not any(row["intent"]["verb"] == "wait" for row in records)
+        assert all(
+            row["settlement"] != "unknown"
+            for row in records
+            if row["intent"]["verb"] in {"create", "start", "remove"}
+        )
+        closure = None
+        if budget == "near-deadline":
+            assert result["termination"] == "unknown"
+            assert result["environment_release"] == "quarantined"
+            assert r.snapshot()["environment"]["state"] == "quarantined"
+            command = r.command()
+            r.supervisor.begin(command)
+            closure = r.supervisor.reconcile(command["closure_id"])
+            assert closure["progress"]["receipt"] is not None
+            assert r.call("result", request_id=r.request.request_id) == result
+        else:
+            assert result["termination"] == "confirmed"
+            assert result["environment_release"] == "released"
+        assert r.snapshot()["environment"]["state"] == "free"
+        candidate = "birbverify-" + r.request.request_id + ".attempt"
+        assert r.engine.raw("GET", container_path(candidate) + "/json")[0] == 404
+        publish(
+            "delayed-start-" + budget,
+            {
+                "manifest": result,
+                "snapshot": r.snapshot(),
+                "start": starts[0],
+                "proxy_replies": replies,
+                "closure": closure,
+            },
+        )
+    finally:
+        abort.set()
+        server.shutdown()
+        server.server_close()
 
 
 def test_transport_rejects_delayed_v1_envelope(runtime):

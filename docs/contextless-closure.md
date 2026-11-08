@@ -70,9 +70,14 @@ This intentional inability to recover automatically is a safety result.
 An unknown read-only wait or log response does not establish an outstanding
 mutation. It does not substitute for the final attributable absence observation.
 The adapter still enforces the request's check timeout and deadline.
+Mutating start uses the normal control timeout, so its reply may arrive after
+the procedure budget expires. The remaining budget bounds the read-only wait.
+Lease expiry still requires explicit supervisor recovery after cleanup.
 
 A lost reply for a mutating supervisor command also leaves that command unknown.
 The supervisor cannot resend it or infer settlement from current container state.
+The supervisor's fixed observation IDs also replay an unknown or non-404 result
+instead of automatically taking a fresh observation. That path stays blocked.
 The target can accept fresh valid stop evidence after rejecting an earlier set;
 this does not promise automatic recovery from every supervisor transport failure.
 
