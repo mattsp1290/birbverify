@@ -767,6 +767,133 @@ def test_f07_f18_known_context_release_and_claim_arbitrate(fixture):
         )
 
 
+@pytest.mark.parametrize("legacy_method", ["recover", "release"])
+@pytest.mark.parametrize("first", ["legacy", "closure"])
+def test_f18_f28_legacy_and_closure_transaction_orders(fixture, legacy_method, first):
+    f = fixture
+    owner = f.reserve()
+    f.call("uncertain", **owner)
+    manifest = inconclusive_manifest(f, owner)
+    assert f.call("finish", **owner, manifest=manifest) == manifest
+    with f.target.connect() as db:
+        manifest_bytes = db.execute(
+            "SELECT manifest FROM attempts WHERE id=?", (owner["attempt_id"],)
+        ).fetchone()[0]
+    if legacy_method == "release":
+        f.call("recover", **owner, recovery_key=f.key)
+        f.call("cleanup", **owner)
+
+    command = f.command()
+    entered, release, competing = threading.Event(), threading.Event(), threading.Event()
+    holder = f.target if first == "legacy" else f.target.closure
+    attribute = "legacy_call" if first == "legacy" else "begin"
+    original = getattr(holder, attribute)
+
+    def blocked(*args, **kwargs):
+        result = original(*args, **kwargs)
+        entered.set()
+        assert release.wait(5)
+        return result
+
+    setattr(holder, attribute, blocked)
+    second = Target(f.root / "target.sqlite", f.config)
+    calls = {
+        "legacy": (legacy_method, {**owner, "recovery_key": f.key}),
+        "closure": ("begin_closure", {"command": command, "recovery_key": f.key}),
+    }
+    other = "closure" if first == "legacy" else "legacy"
+
+    def compete():
+        competing.set()
+        return second.call(*calls[other], binding=f.binding, peer=f.peer)
+
+    try:
+        with ThreadPoolExecutor(2) as executor:
+            one = executor.submit(f.target.call, *calls[first], binding=f.binding, peer=f.peer)
+            assert entered.wait(5)
+            two = executor.submit(compete)
+            assert competing.wait(5)
+            release.set()
+            result = one.result()
+            if first == "legacy":
+                assert result == (
+                    {"released": True}
+                    if legacy_method == "release"
+                    else {"termination": "supervisor_confirmed"}
+                )
+                closure_result = two.result()
+            else:
+                closure_result = result
+                with pytest.raises(TargetError, match="request_closed"):
+                    two.result()
+    finally:
+        release.set()
+        setattr(holder, attribute, original)
+
+    released_by_legacy = first == "legacy" and legacy_method == "release"
+    if released_by_legacy:
+        assert closure_result["status"] == "already_released"
+        assert f.begin(command) == closure_result
+        assert f.snapshot()["requests"][0]["closure"] is None
+    else:
+        assert closure_result["progress"]["acquisition"]["kind"] == "acquired"
+        assert f.snapshot()["environment"]["owner"]["kind"] == "closure"
+        for method in ("recover", "release"):
+            with pytest.raises(TargetError, match="request_closed"):
+                f.call(method, **owner, recovery_key=f.key)
+        confirm_unit_stop(f, owner, command)
+        view = f.read(command)
+        cleaned = f.call(
+            "cleanup_closure",
+            closure_id=command["closure_id"],
+            recovery_key=f.key,
+            expected_revision=view["record_revision"],
+            cleanup_payload_sha256=view["cleanup_payload_sha256"],
+        )
+        receipt = f.call(
+            "release_closure",
+            closure_id=command["closure_id"],
+            recovery_key=f.key,
+            expected_revision=cleaned["record_revision"],
+        )
+        assert receipt["history"] == {
+            "manifest_status": "present",
+            "manifest_sha256": digest(manifest),
+        }
+        successor = f.new_request("successor-after-arbitration")
+        f.reserve(successor, "successor-attempt")
+        before = f.snapshot(f.request.request_id, successor.request_id)
+        for method in ("recover", "release"):
+            with pytest.raises(TargetError, match="request_closed"):
+                f.call(method, **owner, recovery_key=f.key)
+        assert (
+            f.call(
+                "release_closure",
+                closure_id=command["closure_id"],
+                recovery_key=f.key,
+                expected_revision=cleaned["record_revision"],
+            )
+            == receipt
+        )
+        assert f.snapshot(f.request.request_id, successor.request_id) == before
+        assert before["environment"]["owner"]["request_id"] == successor.request_id
+
+    assert f.call("result", request_id=f.request.request_id) == manifest
+    with f.target.connect() as db:
+        assert (
+            db.execute(
+                "SELECT manifest FROM attempts WHERE id=?", (owner["attempt_id"],)
+            ).fetchone()[0]
+            == manifest_bytes
+        )
+        assert db.execute(
+            "SELECT count(*) FROM release_transitions WHERE request=?", (f.request.request_id,)
+        ).fetchone()[0] == int(released_by_legacy)
+        assert db.execute(
+            "SELECT count(*) FROM closure_records WHERE request=?", (f.request.request_id,)
+        ).fetchone()[0] == int(not released_by_legacy)
+
+
 def test_f26_post_seal_completion_is_evidence_only(fixture):
     import base64
 

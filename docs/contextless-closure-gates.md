@@ -31,7 +31,7 @@ activity. It writes private observations through `BIRBVERIFY_CLOSURE_EVIDENCE`.
 | F15 | Changed reason, expected fields and second closure identity conflict | Closure identity is immutable |
 | F16 | Fresh supervisor instances recover each committed step from target after lost replies | No local reconstructed worker token |
 | F17 | Inject cleanup failure before commit, verify rollback and quarantine, then reconcile original operation | External unknown cleanup remains unsupported |
-| F18 | Original inconclusive manifest survives ordinary known-context recovery; closure and legacy release authority exclude each other | Consumer receipt-file arbitration remains deferred |
+| F18 | Original inconclusive manifest survives ordinary recovery; independent connections race recover/release against closure in both transaction orders | Consumer receipt-file arbitration remains deferred |
 | F19 | Closed identity never reserves again; changed request conflicts; new work uses new identities | No attempt-budget reset |
 | F20 | Kill target before/after fence, stop confirmation, cleanup and release commits, including acquired execution; restart verifies atomic old-or-new state. Changed incarnation denies admission | Restore remains blocked; automatic reconciliation and silent rollback detection are not implemented |
 | F21 | Privileged methods reject missing capability, stale/null worker authority and unavailable/tampered evidence | Trusted same-UID fixture, not production identity |
@@ -41,7 +41,7 @@ activity. It writes private observations through `BIRBVERIFY_CLOSURE_EVIDENCE`.
 | F25 | Registered worker includes the actual token holder and escaped-session descendant; removal precedes a delayed-write challenge. A real Temporal worker is removed | Native Mac process isolation is not proved |
 | F26 | Lost intent ACK produces zero daemon create sends; post-seal completion settles only an existing intent; replay never authorizes send | Unknown delivery remains unknown |
 | F27 | First live-worker stop evidence is rejected; later attributable evidence confirms the same closure | Accepted evidence set is immutable |
-| F28 | Claimed request rejects legacy recover/release; immutable history is preserved | Actual consumer early-return branches and request lock are deferred |
+| F28 | Claimed request rejects legacy recover/release even after closure releases and a successor acquires; immutable history is preserved | Actual consumer early-return branches and request lock are deferred |
 | F29 | Sealed reserve reports `request_closed` before busy; real delayed worker creates no attempt; Temporal exposes a non-retryable `RequestClosed` error | A generic error never proves queue release |
 
 Additional regressions reject an old absence observation before a later create,
