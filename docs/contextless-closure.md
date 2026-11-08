@@ -57,8 +57,8 @@ ambiguous responses remain unknown. Local exit codes and later container absence
 cannot settle an earlier command.
 
 The supervisor first removes the exact worker container and inspects that ID for
-404. An exited container alone is insufficient. Every earlier worker command
-must then have determinate completion evidence. Only afterward does it remove
+404. An exited container alone is insufficient. Every earlier create, start and
+remove command must then have determinate completion evidence. Only afterward does it remove
 and inspect the candidate. The target revalidates the evidence against its own
 journal, including ordering, before accepting stop. After stop confirmation, no
 new closure lifecycle command is accepted.
@@ -66,6 +66,15 @@ new closure lifecycle command is accepted.
 A held create that reaches Docker after the worker dies remains quarantined.
 The fixture does not infer command settlement from a later labelled container.
 This intentional inability to recover automatically is a safety result.
+
+An unknown read-only wait or log response does not establish an outstanding
+mutation. It does not substitute for the final attributable absence observation.
+The adapter still enforces the request's check timeout and deadline.
+
+A lost reply for a mutating supervisor command also leaves that command unknown.
+The supervisor cannot resend it or infer settlement from current container state.
+The target can accept fresh valid stop evidence after rejecting an earlier set;
+this does not promise automatic recovery from every supervisor transport failure.
 
 The v2 candidate adapter captures bounded Docker logs with a per-container
 `json-file` log limit, then removes the container. The v1 adapter retains its
@@ -95,6 +104,11 @@ in one revisioned target snapshot. `validate_closure_receipt` separately checks
 that the target's historical receipt and required retained evidence are valid
 and available. A historical receipt may remain readable when evidence is missing;
 validation then returns false. Receipt replay never changes a successor owner.
+
+The existing `projection.observe` helper serves the legacy profile. It uses
+unversioned transport and cannot read an enabled v2 target. The later Birbforge
+integration must project the extension's atomic observation through AG-UI.
+Historical attempt rows are not rewritten into synthetic verification outcomes.
 
 The later consumer must require the exact blocked request's validated receipt
 and a fresh matching free snapshot. A terminal error, fence or old receipt alone
@@ -143,7 +157,11 @@ The default `scripts/verify` continues to run the original fixture suite and now
 writes reports into ignored `.proof/evidence`. It does not rewrite the published
 v1 manifest example. The extension runner includes the baseline and extension
 suites, writes JUnit and observations to the chosen private directory, and does
-not publish them automatically. Run `scripts/export-closure` only when intentionally
+not publish them automatically. It records source hashes before the run and
+rejects source changes afterward. The revision remains caller-supplied until a
+reviewer compares those hashes with the named Git commit. The proof summary
+includes the actual worker image ID, test counts and artifact digests.
+Run `scripts/export-closure` only when intentionally
 updating the extension schema fixtures.
 
 ## Limits that remain
@@ -154,7 +172,13 @@ cannot be reconstructed from current PID or container absence. Old-incarnation
 requests cannot obtain never-acquired receipts in a replacement target. Silent
 in-place SQLite rollback remains outside the trust assumption.
 
-Legacy acquired records without complete durable provenance stay quarantined.
+Legacy acquired records with an epoch but incomplete durable provenance can be
+sealed and stay quarantined. Their progress uses
+`acquired_provenance_unavailable` with a null reservation digest. That variant
+cannot appear in a release receipt. Pre-extension records without an epoch are rejected
+before a closure claim. Neither case permits inferred never-acquired release.
+Observation of unsupported old-incarnation records fails closed. Policy changes
+can also prevent replay authorization; historical authority is not reconstructed.
 The real Birbforge queue and its two supervisor paths still need their own
 integration, including request-level reconciliation locking. Staging mutation
 fencing, native isolation, production identity, artifact retention and physical

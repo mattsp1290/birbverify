@@ -389,6 +389,11 @@ def test_f08_f17_f22_missing_provenance_and_evidence_quarantine(fixture):
     command = f.command()
     result = f.begin(command)
     assert result["progress"]["blocking_reason"] == "legacy_provenance_unavailable"
+    assert result["progress"]["acquisition"] == {
+        "kind": "acquired_provenance_unavailable",
+        "attempt_id": "unit-attempt",
+        "reservation_sha256": None,
+    }
     f.call(
         "confirm_closure_stop",
         closure_id=command["closure_id"],
@@ -524,7 +529,9 @@ def test_strict_extension_models(fixture):
         assert BeginClosure.model_validate_json(golden.read_text())
 
 
-def daemon_observation(f, owner, verb, suffix, *, status, body=b"", closure=None, worker=False):
+def daemon_observation(
+    f, owner, verb, suffix, *, status, body=b"", closure=None, worker=False, unknown=False
+):
     import base64
 
     from birbverify.closure import HttpCommand, LifecycleIntent
@@ -535,6 +542,8 @@ def daemon_observation(f, owner, verb, suffix, *, status, body=b"", closure=None
         "remove": ("DELETE", f"/containers/{name}?force=true"),
         "start": ("POST", f"/containers/{name}/start"),
         "create": ("POST", f"/containers/create?name={name}"),
+        "wait": ("POST", f"/containers/{name}/wait?condition=not-running"),
+        "logs": ("GET", f"/containers/{name}/logs?stdout=true&stderr=true"),
     }
     method, path = paths[verb]
     configuration = None
@@ -579,7 +588,7 @@ def daemon_observation(f, owner, verb, suffix, *, status, body=b"", closure=None
             "daemon_id": "unit-daemon",
             "host_boot_id": f.peer["host_boot_id"],
             "response": {
-                "kind": "daemon_reply",
+                "kind": "delivery_unknown" if unknown else "daemon_reply",
                 "command": command.model_dump(mode="json"),
                 "command_sha256": digest(command),
                 "status": status,
@@ -849,6 +858,10 @@ def test_published_extension_schema_and_independent_golden_digests():
     assert ClosureReceipt.model_validate(receipt)
     for value, expected in (
         (command, golden["begin_sha256"]),
+        (
+            json.loads((directory / "begin-unicode.example.json").read_text()),
+            golden["begin_unicode_sha256"],
+        ),
         (command["request"], golden["request_sha256"]),
         (
             {key: value for key, value in receipt.items() if key != "receipt_sha256"},
@@ -870,3 +883,152 @@ def test_published_extension_schema_and_independent_golden_digests():
                 "data": {},
             }
         )
+
+
+def test_intent_cannot_borrow_another_attempt_authority(fixture):
+    f = fixture
+    old_owner = f.reserve()
+    intent, _ = daemon_observation(f, old_owner, "start", "old-start", status=204)
+    closure = f.command()
+    f.begin(closure)
+    confirm_unit_stop(f, old_owner, closure)
+    view = f.read(closure)
+    cleaned = f.call(
+        "cleanup_closure",
+        closure_id=closure["closure_id"],
+        recovery_key=f.key,
+        expected_revision=view["record_revision"],
+        cleanup_payload_sha256=view["cleanup_payload_sha256"],
+    )
+    f.call(
+        "release_closure",
+        closure_id=closure["closure_id"],
+        recovery_key=f.key,
+        expected_revision=cleaned["record_revision"],
+    )
+    successor = f.new_request("successor")
+    current_owner = f.reserve(successor, "successor-attempt")
+    payload = intent.model_dump(mode="json")
+    payload["operation_id"] = "cross-attempt-start"
+    before = f.snapshot(successor.request_id)
+    with pytest.raises(TargetError, match="intent_binding_mismatch"):
+        f.call("lifecycle_intent", intent=payload, **current_owner)
+    assert f.snapshot(successor.request_id) == before
+    with f.target.connect() as db:
+        assert (
+            db.execute(
+                "SELECT count(*) FROM lifecycle_intents WHERE id='cross-attempt-start'"
+            ).fetchone()[0]
+            == 0
+        )
+
+
+@pytest.mark.parametrize("verb", ["wait", "logs", "inspect"])
+def test_unknown_observation_does_not_replace_mutation_settlement_or_final_absence(fixture, verb):
+    f = fixture
+    owner = f.reserve()
+    daemon_observation(
+        f, owner, "create", "create", status=201, body=json.dumps({"Id": "b" * 64}).encode()
+    )
+    daemon_observation(f, owner, verb, "unknown-observation", status=None, unknown=True)
+    with pytest.raises(TargetError, match="container_absence_unconfirmed"):
+        f.call("stop", **owner)
+    daemon_observation(f, owner, "remove", "remove", status=204)
+    daemon_observation(f, owner, "inspect", "absent", status=404)
+    assert f.call("stop", **owner)["termination"] == "confirmed"
+    closure = f.command()
+    f.begin(closure)
+    confirmed = confirm_unit_stop(f, owner, closure)
+    assert confirmed["progress"]["stop"]["kind"] == "confirmed"
+
+
+@pytest.mark.parametrize("verb", ["create", "start", "remove"])
+def test_unknown_mutation_still_blocks_after_final_absence(fixture, verb):
+    f = fixture
+    owner = f.reserve()
+    daemon_observation(f, owner, verb, "unknown-mutation", status=None, unknown=True)
+    daemon_observation(f, owner, "inspect", "absent", status=404)
+    with pytest.raises(TargetError, match="intent_unsettled"):
+        f.call("stop", **owner)
+    closure = f.command()
+    f.begin(closure)
+    confirmed = confirm_unit_stop(f, owner, closure)
+    assert confirmed["progress"]["stop"] is None
+    assert confirmed["progress"]["blocking_reason"] == "intent_unsettled"
+
+
+def test_true_legacy_attempt_without_epoch_cannot_be_fenced_as_never_acquired(fixture):
+    f = fixture
+    f.reserve()
+    with f.target.connect() as db:
+        db.execute("DELETE FROM reservation_provenance")
+        db.execute("DELETE FROM request_epochs")
+    with pytest.raises(TargetError, match="legacy_provenance_unavailable"):
+        f.begin(f.command())
+    with f.target.connect() as db:
+        assert db.execute("SELECT count(*) FROM closure_records").fetchone()[0] == 0
+        assert db.execute("SELECT owner FROM environment").fetchone()[0] == "unit-attempt"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("output", [[], {"assertion": "wrong", "passed": True}])
+async def test_v2_check_rejects_invalid_observation_shape(fixture, monkeypatch, output):
+    import base64
+    import struct
+    from types import SimpleNamespace
+
+    from birbverify.runner import ExecutionState, Runner
+
+    f = fixture
+
+    class Controls:
+        def __init__(self, *args, **kwargs):
+            self.engine = SimpleNamespace(timeout=65)
+
+        async def async_command(self, operation, verb, *args):
+            body = b""
+            status = 204
+            if verb == "create":
+                status = 201
+            elif verb == "wait":
+                status, body = 200, b'{"StatusCode":0}'
+            elif verb == "logs":
+                raw = json.dumps(output).encode()
+                status, body = 200, b"\x01\0\0\0" + struct.pack(">I", len(raw)) + raw
+            elif verb == "inspect":
+                status = 404
+            return {"status": status, "body_base64": base64.b64encode(body).decode()}
+
+    monkeypatch.setattr("birbverify.runner.GatedDocker", Controls)
+    runner = object.__new__(Runner)
+    runner.root, runner.binding, runner.registration = f.root, f.binding, f.registration
+    state = ExecutionState()
+    with pytest.raises(RuntimeError, match="invalid_procedure_observation"):
+        await runner.closure_check(f.request, "unit-attempt", f.root, {"execution_epoch": 1}, state)
+    assert state.stopped
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("worker_start_ticks", 9999),
+        ("host_boot_id", "00000000-0000-4000-8000-000000000001"),
+    ],
+)
+def test_registered_pid_with_wrong_lifetime_is_not_worker_authority(fixture, field, value):
+    f = fixture
+    admitted = f.admit()
+    with pytest.raises(TargetError, match="worker_peer_mismatch"):
+        f.target.call(
+            "reserve",
+            {
+                "request_id": f.request.request_id,
+                "attempt_id": "forged-worker",
+                "execution_epoch": admitted["execution_epoch"],
+                "worker_execution_id": "unit-worker",
+            },
+            binding=f.binding,
+            peer={**f.peer, field: value},
+        )
+    assert f.snapshot()["environment"]["state"] == "free"
+    assert f.call("current_attempt", request_id=f.request.request_id) is None

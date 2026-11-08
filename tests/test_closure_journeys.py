@@ -17,7 +17,7 @@ from birbverify.closure_supervisor import Supervisor
 from birbverify.contract import Request, digest
 from birbverify.fixture import initialize, request, start_target, stop
 from birbverify.fixture_launcher import WorkerGroup, enable
-from birbverify.lifecycle import Engine, container_path, save_evidence
+from birbverify.lifecycle import Engine, GatedDocker, container_path, save_evidence
 from birbverify.target import rpc
 from birbverify.temporal_worker import FixtureWorkflow
 
@@ -164,13 +164,36 @@ def test_f03_f04_f08_f25_f27_actual_worker_and_escaped_child_stop(runtime):
     command = r.command()
     r.supervisor.begin(command)
     view = r.supervisor.read(command["closure_id"])
+    reservation = view["reservation"]
+    controls = GatedDocker(
+        r.root,
+        r.call,
+        r.request.request_id,
+        reservation["execution_epoch"],
+        reservation["attempt_id"],
+        reservation["registration"],
+        closure_id=command["closure_id"],
+        recovery_key=r.supervisor.key,
+    )
+    alive = controls.command(
+        "live-worker-evidence",
+        "inspect",
+        group.container_id,
+        "GET",
+        container_path(group.container_id) + "/json",
+    )
+    assert alive["status"] == 200
+    records = r.call(
+        "lifecycle_records", request_id=r.request.request_id, recovery_key=r.supervisor.key
+    )
+    view = r.supervisor.read(command["closure_id"])
     fake = save_evidence(
         r.root,
         "stop",
         {
             "closure_id": command["closure_id"],
             "reservation_sha256": digest(view["reservation"]),
-            "command_evidence": [],
+            "command_evidence": [record["completion"] for record in records],
         },
     )
     rejected = r.call(
@@ -404,14 +427,33 @@ async def test_real_temporal_worker_loss_resolves_without_context(runtime):
         publish("temporal-worker-loss", {"snapshot": r.snapshot(), "progress": view["progress"]})
 
 
-@pytest.mark.parametrize("step", ["begin_closure", "cleanup_closure", "release_closure"])
+@pytest.mark.parametrize(
+    "step,acquired",
+    [
+        ("begin_closure", False),
+        ("cleanup_closure", False),
+        ("release_closure", False),
+        ("begin_closure", True),
+        ("confirm_closure_stop", True),
+        ("cleanup_closure", True),
+        ("release_closure", True),
+    ],
+)
 @pytest.mark.parametrize("boundary", ["before_commit", "after_commit"])
-def test_f20_process_crash_at_each_transaction_boundary(runtime, step, boundary):
+def test_f20_process_crash_at_each_transaction_boundary(runtime, step, boundary, acquired):
     r = runtime
     r.start()
+    if acquired:
+        r.worker("acquired")
+        r.wait_file("acquired.ready")
     command = r.command()
+    stop_args = None
     if step != "begin_closure":
         r.supervisor.begin(command)
+        if acquired:
+            stop_args = acquired_stop_arguments(r, command)
+            if step != "confirm_closure_stop":
+                r.call("confirm_closure_stop", **stop_args)
     if step == "release_closure":
         view = r.supervisor.read(command["closure_id"])
         r.call(
@@ -436,6 +478,8 @@ def test_f20_process_crash_at_each_transaction_boundary(runtime, step, boundary)
         }
         if step == "cleanup_closure":
             args["cleanup_payload_sha256"] = view["cleanup_payload_sha256"]
+        if step == "confirm_closure_stop":
+            args["evidence_ref"] = stop_args["evidence_ref"]
     with pytest.raises((ValueError, OSError)):
         r.call(step, **args)
     r.process.wait(timeout=5)
@@ -457,20 +501,35 @@ def test_f20_process_crash_at_each_transaction_boundary(runtime, step, boundary)
     final = Supervisor(r.root).reconcile(command["closure_id"])
     assert final["progress"]["receipt"] is not None
     publish(
-        "crash-" + step + "-" + boundary,
+        "crash-" + ("acquired-" if acquired else "never-") + step + "-" + boundary,
         {"after_restart": snapshot, "receipt": final["progress"]["receipt"]},
     )
 
 
-def test_f12_f13_f14_f16_lost_step_replies_resume_from_target(runtime):
+@pytest.mark.parametrize("acquired", [False, True])
+def test_f12_f13_f14_f16_lost_step_replies_resume_from_target(runtime, acquired):
     r = runtime
-    r.config["fixture_drop_reply"] = ["begin_closure", "cleanup_closure", "release_closure"]
+    r.config["fixture_drop_reply"] = [
+        "begin_closure",
+        "confirm_closure_stop",
+        "cleanup_closure",
+        "release_closure",
+    ]
     r.start()
+    if acquired:
+        r.worker("acquired")
+        r.wait_file("acquired.ready")
     command = r.command()
     with pytest.raises(ValueError):
         r.supervisor.begin(command)
     view = Supervisor(r.root).read(command["closure_id"])
     fence = view["progress"]["fence"]
+    if acquired:
+        args = acquired_stop_arguments(r, command)
+        with pytest.raises(ValueError):
+            r.call("confirm_closure_stop", **args)
+        view = Supervisor(r.root).read(command["closure_id"])
+        assert view["progress"]["stop"]["kind"] == "confirmed"
     with pytest.raises(ValueError):
         r.call(
             "cleanup_closure",
@@ -496,7 +555,8 @@ def test_f12_f13_f14_f16_lost_step_replies_resume_from_target(runtime):
         == final["progress"]["receipt"]
     )
     publish(
-        "step-replies-lost", {"receipt": final["progress"]["receipt"], "snapshot": r.snapshot()}
+        "step-replies-lost-" + ("acquired" if acquired else "never"),
+        {"receipt": final["progress"]["receipt"], "snapshot": r.snapshot()},
     )
 
 
@@ -513,3 +573,111 @@ def test_registered_identity_from_another_worker_is_not_authority(runtime):
     assert r.call("current_attempt", request_id=r.request.request_id) is None
     assert r.snapshot()["environment"]["state"] == "free"
     publish("wrong-worker-identity", {"error": error, "snapshot": r.snapshot()})
+
+
+def acquired_stop_arguments(r, command):
+    saved = {}
+    original = r.supervisor.call
+
+    def capture(method, **data):
+        if method == "confirm_closure_stop":
+            saved.update(data)
+            raise RuntimeError("fixture_stop_arguments_captured")
+        return original(method, **data)
+
+    r.supervisor.call = capture
+    try:
+        with pytest.raises(RuntimeError, match="fixture_stop_arguments_captured"):
+            r.supervisor.reconcile(command["closure_id"])
+    finally:
+        r.supervisor.call = original
+    return saved
+
+
+def test_v2_check_timeout_is_inconclusive_and_releases_after_confirmed_absence(runtime):
+    r = runtime
+    r.request = r.new_request("slow-" + uuid.uuid4().hex[:12], slow=True, timeout=1)
+    r.start()
+    r.worker()
+    r.wait_file("worker-ended")
+    result = r.call("result", request_id=r.request.request_id)
+    assert result is not None, (r.root / "launch" / "worker-error.json").read_text()
+    assert result["outcome"] == "inconclusive"
+    assert result["termination"] == "confirmed"
+    assert result["environment_release"] == "released"
+    assert r.snapshot()["environment"]["state"] == "free"
+    records = r.call(
+        "lifecycle_records", request_id=r.request.request_id, recovery_key=r.supervisor.key
+    )
+    assert any(
+        row["intent"]["verb"] == "wait" and row["settlement"] == "unknown" for row in records
+    )
+    assert all(
+        row["settlement"] != "unknown"
+        for row in records
+        if row["intent"]["verb"] in {"create", "start", "remove"}
+    )
+    candidate = "birbverify-" + r.request.request_id + ".attempt"
+    assert r.engine.raw("GET", container_path(candidate) + "/json")[0] == 404
+    publish("v2-check-timeout", {"manifest": result, "snapshot": r.snapshot()})
+
+
+def test_transport_rejects_delayed_v1_envelope(runtime):
+    import socket
+
+    r = runtime
+    r.start()
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+        client.settimeout(5)
+        client.connect(str(r.root / "transport" / "target.sock"))
+        client.sendall(
+            json.dumps(
+                {"method": "admit", "data": {"request": r.request.model_dump(mode="json")}}
+            ).encode()
+            + b"\n"
+        )
+        with client.makefile("rb") as response:
+            result = json.loads(response.readline())
+    assert "validation errors for Envelope" in result["error"]
+    assert "protocol" in result["error"]
+    assert r.snapshot()["requests"][0]["execution_epoch"] is None
+
+
+@pytest.mark.asyncio
+async def test_temporal_closed_request_is_nonretryable_terminal(runtime):
+    from temporalio.client import WorkflowFailureError
+    from temporalio.exceptions import ActivityError, ApplicationError
+
+    r = runtime
+    r.start()
+    command = r.command()
+    r.supervisor.begin(command)
+    r.supervisor.reconcile(command["closure_id"])
+    async with await WorkflowEnvironment.start_local(
+        dev_server_existing_path=str(Path(".proof/bin/temporal").resolve())
+    ) as temporal:
+        group = WorkerGroup(
+            r.root,
+            [
+                sys.executable,
+                "-m",
+                "birbverify.temporal_worker",
+                str(r.root),
+                temporal.client.service_client.config.target_host,
+            ],
+        )
+        r.groups.append(group)
+        handle = await temporal.client.start_workflow(
+            FixtureWorkflow.run,
+            r.request.model_dump(mode="json"),
+            id=r.request.request_id,
+            task_queue="birbverify-fixture",
+        )
+        with pytest.raises(WorkflowFailureError) as error:
+            await handle.result()
+        assert isinstance(error.value.cause, ActivityError)
+        cause = error.value.cause.cause
+        assert isinstance(cause, ApplicationError)
+        assert cause.type == "RequestClosed" and cause.non_retryable
+        assert r.call("current_attempt", request_id=r.request.request_id) is None
+        assert r.snapshot()["environment"]["state"] == "free"

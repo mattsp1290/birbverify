@@ -437,7 +437,8 @@ class ClosureStore:
         provenance = json.loads(row[0])
         records = self.records(db, provenance["request_id"])
         for item in records:
-            self.validate_completion(item)
+            if item["intent"]["verb"] in {"create", "start", "remove"}:
+                self.validate_completion(item)
         creates = [item for item in records if item["intent"]["verb"] == "create"]
         if creates:
             candidate = provenance["candidate_container"]
@@ -469,6 +470,8 @@ class ClosureStore:
         return (
             item["intent"]["verb"] == "inspect"
             and item["intent"]["container"] == container
+            and item["completion"] is not None
+            and item["settlement"] == "observation"
             and self.validate_completion(item)["response"]["status"] == 404
         )
 
@@ -582,11 +585,9 @@ class ClosureStore:
         )
         acquired = (
             {
-                "kind": "acquired",
+                "kind": "acquired" if reservation else "acquired_provenance_unavailable",
                 "attempt_id": attempt_id,
-                "reservation_sha256": reservation[0]
-                if reservation
-                else digest({"legacy": attempt_id}),
+                "reservation_sha256": reservation[0] if reservation else None,
             }
             if attempt
             else {"kind": "never_acquired", "attempt_id": None, "reservation_sha256": None}
@@ -689,6 +690,10 @@ class ClosureStore:
         ):
             self.fail("intent_binding_mismatch")
         if intent.authority == "worker":
+            if intent.attempt_id != data.get("attempt_id") or intent.execution_epoch != data.get(
+                "execution_epoch"
+            ):
+                self.fail("intent_binding_mismatch")
             self.worker_guard(db, env, data)
             if intent.verb in {"create", "start"}:
                 self.target.fence(env, data)
@@ -852,7 +857,8 @@ class ClosureStore:
             if evidence.get("command_evidence") != references:
                 self.fail("stop_evidence_incomplete")
             for item in records:
-                self.validate_completion(item)
+                if item["intent"]["verb"] in {"create", "start", "remove"}:
+                    self.validate_completion(item)
             group = reservation["registration"]["group"]
             worker_remove = [
                 item
@@ -874,7 +880,7 @@ class ClosureStore:
                 (
                     item["completion_revision"]
                     for item in records
-                    if item["intent"]["authority"] == "worker"
+                    if item["intent"]["verb"] in {"create", "start", "remove"}
                 ),
                 default=0,
             )

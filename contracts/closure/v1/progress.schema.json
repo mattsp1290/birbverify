@@ -27,6 +27,32 @@
       "title": "Acquired",
       "type": "object"
     },
+    "AcquiredProvenanceUnavailable": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "kind": {
+          "const": "acquired_provenance_unavailable",
+          "default": "acquired_provenance_unavailable",
+          "title": "Kind",
+          "type": "string"
+        },
+        "reservation_sha256": {
+          "default": null,
+          "title": "Reservation Sha256",
+          "type": "null"
+        }
+      },
+      "required": [
+        "attempt_id"
+      ],
+      "title": "AcquiredProvenanceUnavailable",
+      "type": "object"
+    },
     "Cleanup": {
       "additionalProperties": false,
       "properties": {
@@ -505,6 +531,7 @@
       "discriminator": {
         "mapping": {
           "acquired": "#/$defs/Acquired",
+          "acquired_provenance_unavailable": "#/$defs/AcquiredProvenanceUnavailable",
           "never_acquired": "#/$defs/NeverAcquired"
         },
         "propertyName": "kind"
@@ -515,6 +542,9 @@
         },
         {
           "$ref": "#/$defs/Acquired"
+        },
+        {
+          "$ref": "#/$defs/AcquiredProvenanceUnavailable"
         }
       ],
       "title": "Acquisition"

@@ -446,6 +446,7 @@ def serve(root: Path):
                     "reserve",
                     "lifecycle_intent",
                     "begin_closure",
+                    "confirm_closure_stop",
                     "cleanup_closure",
                     "release_closure",
                 }:

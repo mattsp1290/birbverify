@@ -83,6 +83,17 @@ class Acquired(Record):
 Acquisition = Annotated[NeverAcquired | Acquired, Field(discriminator="kind")]
 
 
+class AcquiredProvenanceUnavailable(Record):
+    kind: Literal["acquired_provenance_unavailable"] = "acquired_provenance_unavailable"
+    attempt_id: Id
+    reservation_sha256: None = None
+
+
+AcquisitionProgress = Annotated[
+    NeverAcquired | Acquired | AcquiredProvenanceUnavailable, Field(discriminator="kind")
+]
+
+
 class NotStarted(Record):
     kind: Literal["not_started_target_confirmed"] = "not_started_target_confirmed"
     evidence_refs: tuple[EvidenceRef, ...] = Field(min_length=1)
@@ -254,7 +265,7 @@ class Environment(Record):
 class Progress(Record):
     closure_id: UUID
     execution_epoch: Positive
-    acquisition: Acquisition
+    acquisition: AcquisitionProgress
     phase: Literal["fenced_stop_unknown", "fenced_cleanup_unknown", "release_confirmed"]
     blocking_reason: Id | None
     fence: Fence
@@ -276,6 +287,11 @@ class Progress(Record):
             raise ValueError("never_acquired_requires_target_stop")
         if self.acquisition.kind == "acquired" and self.stop and self.stop.kind != "confirmed":
             raise ValueError("acquired_requires_execution_stop")
+        if self.acquisition.kind == "acquired_provenance_unavailable" and (
+            self.phase != "fenced_stop_unknown"
+            or self.blocking_reason != "legacy_provenance_unavailable"
+        ):
+            raise ValueError("missing_provenance_requires_quarantine")
         if self.receipt and (
             not self.cleanup
             or self.receipt.closure_id != self.closure_id

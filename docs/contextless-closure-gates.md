@@ -25,7 +25,7 @@ activity. It writes private observations through `BIRBVERIFY_CLOSURE_EVIDENCE`.
 | F09 | Worker pauses after positive start-intent acknowledgement, then crosses the seal; release waits for settled controls and whole-worker removal | The SQL seal alone is insufficient |
 | F10 | Proxy holds create outside worker, worker dies, target observes absence, then real daemon creates the candidate; a successor stays unacquired | Unknown delivery intentionally remains quarantined |
 | F11 | Fixture queue predicate binds target ID/incarnation, retained receipt validation and current free state; missing/corrupt proof and a busy successor block it | Actual Birbforge FIFO integration is deferred |
-| F12 | Drop fence reply and recover the original target record; independent process crash boundaries also run | Coordinator retains original command |
+| F12 | Drop fence reply for never-acquired and acquired requests; recover the original target record | Coordinator retains original command |
 | F13 | Drop cleanup reply; replay does not reset twice and changed payload conflicts | Fixture cleanup is transactional |
 | F14 | Release replay returns exact receipt while successor ownership remains unchanged | No authority over the successor |
 | F15 | Changed reason, expected fields and second closure identity conflict | Closure identity is immutable |
@@ -33,16 +33,16 @@ activity. It writes private observations through `BIRBVERIFY_CLOSURE_EVIDENCE`.
 | F17 | Inject cleanup failure before commit, verify rollback and quarantine, then reconcile original operation | External unknown cleanup remains unsupported |
 | F18 | Original inconclusive manifest survives ordinary known-context recovery; closure and legacy release authority exclude each other | Consumer receipt-file arbitration remains deferred |
 | F19 | Closed identity never reserves again; changed request conflicts; new work uses new identities | No attempt-budget reset |
-| F20 | Kill target at before/after fence, cleanup and release commit boundaries; restart verifies atomic old-or-new state. Changed incarnation denies admission | Restore remains blocked; automatic reconciliation and silent rollback detection are not implemented |
+| F20 | Kill target before/after fence, stop confirmation, cleanup and release commits, including acquired execution; restart verifies atomic old-or-new state. Changed incarnation denies admission | Restore remains blocked; automatic reconciliation and silent rollback detection are not implemented |
 | F21 | Privileged methods reject missing capability, stale/null worker authority and unavailable/tampered evidence | Trusted same-UID fixture, not production identity |
 | F22 | Remove durable acquired provenance and verify persistent quarantine | No inferred migration |
 | F23 | Dirty free state and unrelated ownership cannot be reset by never-acquired closure | Operator investigation remains required |
-| F24 | Old-incarnation and unversioned envelopes fail before effects | No automatic incarnation rediscovery |
+| F24 | Old-incarnation calls and a real unversioned socket envelope fail before effects | No automatic incarnation rediscovery |
 | F25 | Registered worker includes the actual token holder and escaped-session descendant; removal precedes a delayed-write challenge. A real Temporal worker is removed | Native Mac process isolation is not proved |
 | F26 | Lost intent ACK produces zero daemon create sends; post-seal completion settles only an existing intent; replay never authorizes send | Unknown delivery remains unknown |
 | F27 | First live-worker stop evidence is rejected; later attributable evidence confirms the same closure | Accepted evidence set is immutable |
 | F28 | Claimed request rejects legacy recover/release; immutable history is preserved | Actual consumer early-return branches and request lock are deferred |
-| F29 | Sealed reserve reports `request_closed` before busy; real delayed worker creates no attempt | A generic error never proves queue release |
+| F29 | Sealed reserve reports `request_closed` before busy; real delayed worker creates no attempt; Temporal exposes a non-retryable `RequestClosed` error | A generic error never proves queue release |
 
 Additional regressions reject an old absence observation before a later create,
 new lifecycle commands after confirmed stop, wrong registered worker identity,

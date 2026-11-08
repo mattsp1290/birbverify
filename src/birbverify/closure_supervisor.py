@@ -66,7 +66,8 @@ class Supervisor:
                     "lifecycle_records", request_id=reservation["request_id"], recovery_key=self.key
                 )
                 if any(
-                    record["settlement"] == "unknown" or record["completion"] is None
+                    record["intent"]["verb"] in {"create", "start", "remove"}
+                    and (record["settlement"] == "unknown" or record["completion"] is None)
                     for record in records
                 ):
                     return self.read(closure_id)

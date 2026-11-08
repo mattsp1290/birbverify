@@ -10,9 +10,11 @@ umask 077
 [ -S /var/run/docker.sock ]
 [ -x .proof/bin/temporal ]
 [ -d "$BIRBVERIFY_FIXTURE_ROOT" ]
-uv run ruff check src tests scripts/export-closure
-uv run ruff format --check src tests scripts/export-closure
+uv run ruff check src tests scripts/export-closure scripts/record-closure-proof
+uv run ruff format --check src tests scripts/export-closure scripts/record-closure-proof
 mkdir -p "$BIRBVERIFY_CLOSURE_EVIDENCE"
+uv run python scripts/record-closure-proof start
+set +e
 env -i PATH="$PATH" HOME="$HOME" LANG=C.UTF-8 UV_CACHE_DIR="${UV_CACHE_DIR:-$HOME/.cache/uv}" \
   PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
   BIRBVERIFY_WORKER_IMAGE="$BIRBVERIFY_WORKER_IMAGE" \
@@ -23,3 +25,8 @@ env -i PATH="$PATH" HOME="$HOME" LANG=C.UTF-8 UV_CACHE_DIR="${UV_CACHE_DIR:-$HOM
     tests/test_journeys.py tests/test_closure.py tests/test_closure_journeys.py \
     --basetemp "$BIRBVERIFY_FIXTURE_ROOT/run-$$" \
     --junitxml="$BIRBVERIFY_CLOSURE_EVIDENCE/junit.xml"
+
+result=$?
+set -e
+uv run python scripts/record-closure-proof finish "$result"
+exit "$result"

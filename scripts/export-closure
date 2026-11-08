@@ -66,14 +66,13 @@ command = {
 }
 command = BeginClosure.model_validate(command).model_dump(mode="json")
 write(closure / "begin.example.json", command)
-write(
-    closure / "golden-digests.json",
-    {
-        "canonical_rule": "sorted-json-keys-compact-utf8-full-model",
-        "begin_sha256": sha(command),
-        "request_sha256": sha(request),
-    },
-)
+unicode_command = json.loads(json.dumps(command))
+unicode_request = unicode_command["request"]
+unicode_request["plan"]["checks"][0]["assertion"] = "résultat attendu ✓"
+unicode_request["plan_sha256"] = sha(unicode_request["plan"])
+unicode_command["request_sha256"] = sha(unicode_request)
+unicode_command = BeginClosure.model_validate(unicode_command).model_dump(mode="json")
+write(closure / "begin-unicode.example.json", unicode_command)
 
 
 def operation(step):
@@ -144,9 +143,10 @@ write(closure / "receipt.example.json", receipt)
 write(
     closure / "golden-digests.json",
     {
-        "canonical_rule": "sorted-json-keys-compact-utf8-full-model",
+        "canonical_rule": "sorted-json-keys-compact-ascii-escaped-utf8-full-model",
         "begin_sha256": sha(command),
         "request_sha256": sha(request),
         "receipt_sha256": receipt["receipt_sha256"],
+        "begin_unicode_sha256": sha(unicode_command),
     },
 )

@@ -361,12 +361,24 @@ class Runner:
             )
             if response["status"] != 201:
                 raise RuntimeError("container_create_failed")
+            seconds = min(
+                request.resources.timeout_seconds,
+                max(0.01, (request.resources.deadline - now()).total_seconds()),
+            )
+            end = asyncio.get_running_loop().time() + seconds
+            controls.engine.timeout = seconds
             response = await command("start", "start", "POST", container_path(name) + "/start")
             if response["status"] != 204:
                 raise RuntimeError("container_start_failed")
+            controls.engine.timeout = end - asyncio.get_running_loop().time()
+            if controls.engine.timeout <= 0:
+                raise TimeoutError("procedure_timeout")
             response = await command(
                 "wait", "wait", "POST", container_path(name) + "/wait?condition=not-running"
             )
+            if asyncio.get_running_loop().time() >= end:
+                raise TimeoutError("procedure_timeout")
+            controls.engine.timeout = 65
             status = json.loads(base64.b64decode(response["body_base64"]))
             exit_code = status["StatusCode"]
             if exit_code not in {0, 1}:
@@ -385,10 +397,15 @@ class Runner:
                 output += raw[8 : 8 + size]
                 raw = raw[8 + size :]
             observation = json.loads(output)
-            if observation.get("passed") is not (exit_code == 0):
+            if (
+                not isinstance(observation, dict)
+                or observation.get("assertion") != request.plan.checks[0].assertion
+                or observation.get("passed") is not (exit_code == 0)
+            ):
                 raise RuntimeError("invalid_procedure_observation")
             return exit_code, output
         finally:
+            controls.engine.timeout = 65
             try:
                 task = asyncio.create_task(
                     controls.async_command(
