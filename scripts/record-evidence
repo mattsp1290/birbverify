@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+import hashlib
+import importlib.metadata
+import json
+import platform
+import subprocess
+import xml.etree.ElementTree as ET
+from datetime import UTC, datetime
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+evidence = root / "docs/evidence"
+junit = ET.parse(root / ".proof/junit.xml").getroot()
+suites = list(junit.iter("testsuite"))
+assert suites and sum(int(suite.get("tests", 0)) for suite in suites) >= 14
+assert all(int(suite.get("skipped", 0)) == 0 for suite in suites)
+assert all(int(suite.get("failures", 0)) == int(suite.get("errors", 0)) == 0 for suite in suites)
+
+
+def sha(content):
+    return hashlib.sha256(content).hexdigest()
+
+
+def command(*args):
+    return subprocess.check_output(args, text=True).strip()
+
+
+def save(name, value):
+    (evidence / name).write_text(json.dumps(value, indent=2) + "\n")
+
+
+observations = {
+    name: json.loads((evidence / name).read_text())
+    for name in (
+        "candidate-evidence.json",
+        "lost-reply.json",
+        "fencing.json",
+        "temporal-interruption.json",
+        "expiry.json",
+        "operation-race.json",
+        "atomic-finish.json",
+        "repeated-cancellation.json",
+        "unknown-stop.json",
+    )
+}
+assert all(
+    (evidence / name).stat().st_mtime_ns
+    >= (root / ".proof/verification-started").stat().st_mtime_ns
+    for name in observations
+)
+assert observations["candidate-evidence.json"]["pass"]["outcome"] == "passed"
+assert observations["lost-reply.json"]["result"]["operation_reconciled"]
+assert observations["fencing.json"]["stale_mutation"] == "fenced"
+assert observations["temporal-interruption.json"]["worker_exit"] == -9
+assert observations["temporal-interruption.json"]["cancel"]["cancellation"] == "acknowledged"
+beans = json.loads((root / ".proof/beans-fixture.json").read_text())
+save(
+    "beans-fixture-proof.json",
+    {
+        "fixture_hub_commit": beans["commit"],
+        "issue": beans["issue"]["id"],
+        "handoff": beans["handoff"]["id"],
+        "remote_count": 0,
+        "private_hub_tested": False,
+    },
+)
+manifest = observations["candidate-evidence.json"]["pass"]
+(root / "contracts/v1/manifest.example.json").write_text(json.dumps(manifest, indent=2) + "\n")
+save(
+    "acceptance.json",
+    {
+        "recorded_at": datetime.now(UTC).isoformat(),
+        "evidence_origin": "Codex-executed fixture tests",
+        "tests": sum(int(suite.get("tests", 0)) for suite in suites),
+        "failures": 0,
+        "errors": 0,
+        "required_journeys": list(range(1, 10)),
+        "verdict": "VERIFIED for the isolated fixture only",
+        "junit_sha256": sha((root / ".proof/junit.xml").read_bytes()),
+        "python": platform.python_version(),
+        "os": platform.system(),
+        "architecture": platform.machine(),
+        "dependencies": {
+            name: importlib.metadata.version(name)
+            for name in (
+                "pydantic",
+                "temporalio",
+                "ag-ui-protocol",
+                "pytest",
+                "pytest-asyncio",
+                "ruff",
+            )
+        },
+        "temporal": command(str(root / ".proof/bin/temporal"), "--version"),
+        "docker_engine": command("docker", "version", "--format", "{{.Server.Version}}"),
+        "beans": command("bn", "--version"),
+        "staging_verified": False,
+        "native_mac_isolation_verified": False,
+        "safe_observations": {name: sha((evidence / name).read_bytes()) for name in observations},
+    },
+)
+files = [Path("pyproject.toml"), Path("uv.lock")]
+for directory in ("src", "tests", "contracts", "fixtures", "scripts"):
+    files.extend(
+        path.relative_to(root)
+        for path in (root / directory).rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts
+    )
+save("source-manifest.json", {str(path): sha((root / path).read_bytes()) for path in sorted(files)})
+acceptance = json.loads((evidence / "acceptance.json").read_text())
+acceptance["source_manifest_sha256"] = sha((evidence / "source-manifest.json").read_bytes())
+acceptance["skipped"] = 0
+save("acceptance.json", acceptance)
+print("Recorded nine fixture journeys and source/artifact digests.")

@@ -1,0 +1,24 @@
+[project]
+name = "birbverify"
+version = "0.1.0"
+description = "Bounded verification worker contract and disposable fixture proof"
+requires-python = ">=3.13,<3.14"
+dependencies = ["pydantic==2.12.5", "temporalio==1.35.0", "ag-ui-protocol==1.0.0"]
+
+[dependency-groups]
+dev = ["pytest==9.2.0", "pytest-asyncio==1.3.0", "ruff==0.17.4"]
+
+[build-system]
+requires = ["hatchling==1.30.1"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

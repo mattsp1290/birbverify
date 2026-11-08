@@ -1,0 +1,57 @@
+{
+  "unconfirmed_stop_did_not_acknowledge": true,
+  "quarantine_worker_stop": "denied",
+  "supervisor_confirmed_container_removal": true,
+  "historical_result": {
+    "contract_version": "birbverify.v1",
+    "request_id": "unknown-stop",
+    "request_sha256": "290fd9eab7c950c0bc88eaa999edab081706015ae72b5b3b9bf75a0e4d46b19f",
+    "attempt_id": "unknown-stop-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "5bc8f573ec1cb9ad8e6f0c135ff30a1a17a0a4e8",
+      "pr_head": "5bc8f573ec1cb9ad8e6f0c135ff30a1a17a0a4e8",
+      "base": "5bc0aa97ca9f7050e500fd1a406f0a82e302cae2",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "d3c4e67d1d5218065aa35b2a7124c6142923a1f748355e7b5a9eb08ceca209bc",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:39:06.070665Z",
+    "finished_at": "2026-11-06T16:39:06.397700Z",
+    "observed_before": "5bc8f573ec1cb9ad8e6f0c135ff30a1a17a0a4e8",
+    "observed_after": "5bc8f573ec1cb9ad8e6f0c135ff30a1a17a0a4e8",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "not_run",
+        "observation": "check did not finish before inconclusive",
+        "duration_ms": 0,
+        "artifacts": []
+      }
+    ],
+    "operation_id": "unknown-stop.apply",
+    "operation_reconciled": false,
+    "outcome": "inconclusive",
+    "cleanup": "unknown",
+    "cancellation": "requested",
+    "termination": "unknown",
+    "environment_release": "quarantined",
+    "reason": "termination_unknown"
+  }
+}

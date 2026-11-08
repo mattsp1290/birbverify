@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+
+from birbverify.contract import Manifest, Plan, Request, digest
+
+root = Path(__file__).resolve().parents[1]
+for model in (Request, Manifest):
+    (root / "contracts/v1" / f"{model.__name__.lower()}.schema.json").write_text(
+        json.dumps(model.model_json_schema(), indent=2) + "\n"
+    )
+plan = Plan.model_validate(
+    {
+        "revision": "a" * 40,
+        "checks": [
+            {
+                "id": "value-check",
+                "assertion": "value equals 42",
+                "procedure_path": "check.py",
+                "procedure_revision": "a" * 40,
+                "procedure_sha256": digest((root / "fixtures/check.py").read_bytes()),
+                "required_artifacts": ["observation", "command"],
+            }
+        ],
+        "cleanup": "fixture-reset-v1",
+    }
+)
+request = Request.model_validate(
+    {
+        "contract_version": "birbverify.v1",
+        "request_id": "request-example",
+        "goal_id": "goal-example",
+        "pull_request": "pr-1",
+        "correlation_id": "correlation-example",
+        "idempotency_key": "submission-example",
+        "candidate": {
+            "repository": "fixture",
+            "commit": "b" * 40,
+            "pr_head": "b" * 40,
+            "base": "a" * 40,
+            "kind": "head",
+        },
+        "plan": plan.model_dump(),
+        "plan_sha256": digest(plan),
+        "authority": {
+            "principal": "fixture-owner",
+            "workflow": "forge-fixture",
+            "policy_revision": "c" * 40,
+            "environment": "fixture-local",
+            "permitted_operations": ["fixture.apply", "fixture.reset"],
+        },
+        "resources": {
+            "capabilities": ["linux-docker"],
+            "fixture": "isolated-counter-v1",
+            "timeout_seconds": 10,
+            "max_attempts": 2,
+            "deadline": datetime(2030, 1, 1, tzinfo=UTC),
+        },
+        "evidence": {
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1",
+            "telemetry_correlation": "trace-example",
+        },
+        "components": ["fixture-counter"],
+        "revision_method": "git-archive-and-target-receipt-v1",
+    }
+)
+(root / "contracts/v1/request.example.json").write_text(request.model_dump_json(indent=2) + "\n")
+for name, change in {
+    "reject-unknown-version": {"contract_version": "birbverify.v2"},
+    "reject-credential": {"credential": "synthetic-forbidden"},
+    "reject-plan-drift": {"plan_sha256": "0" * 64},
+}.items():
+    (root / "contracts/v1" / f"{name}.json").write_text(
+        json.dumps({**request.model_dump(mode="json"), **change}, indent=2) + "\n"
+    )

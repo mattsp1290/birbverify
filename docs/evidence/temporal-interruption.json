@@ -1,0 +1,276 @@
+{
+  "journeys": [
+    5,
+    9
+  ],
+  "worker_exit": -9,
+  "temporal_waiter": {
+    "attempt_id": "temporal-waiter-acf13baffb4a2327",
+    "attempt_number": 1,
+    "cancellation": "none",
+    "candidate": {
+      "artifact_sha256": null,
+      "base": "d38e03fa73330168dede009ee37d030a2928ca43",
+      "commit": "d38e03fa73330168dede009ee37d030a2928ca43",
+      "kind": "head",
+      "pr_head": "d38e03fa73330168dede009ee37d030a2928ca43",
+      "repository": "fixture"
+    },
+    "checks": [
+      {
+        "artifacts": [
+          {
+            "captured_at": "2026-11-06T16:38:47.824740Z",
+            "classification": "private",
+            "id": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "kind": "observation",
+            "retention": "fixture-local-until-owner-deletes-v1",
+            "sha256": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "size": 65
+          },
+          {
+            "captured_at": "2026-11-06T16:38:47.828570Z",
+            "classification": "private",
+            "id": "7cff0ce9442abd370967c195b31c86de7d44543276ea831c575aaf53346eb83f",
+            "kind": "command",
+            "retention": "fixture-local-until-owner-deletes-v1",
+            "sha256": "7cff0ce9442abd370967c195b31c86de7d44543276ea831c575aaf53346eb83f",
+            "size": 390
+          }
+        ],
+        "check_id": "value-check",
+        "duration_ms": 432,
+        "observation": "{\"assertion\": \"value equals 42\", \"observed\": 42, \"passed\": true}\n",
+        "outcome": "passed"
+      }
+    ],
+    "cleanup": "complete",
+    "contract_version": "birbverify.v1",
+    "correlation_id": "correlation-example",
+    "environment": "fixture-local",
+    "environment_release": "released",
+    "finished_at": "2026-11-06T16:38:47.857017Z",
+    "observed_after": "d38e03fa73330168dede009ee37d030a2928ca43",
+    "observed_before": "d38e03fa73330168dede009ee37d030a2928ca43",
+    "operation_id": "temporal-waiter.apply",
+    "operation_reconciled": false,
+    "outcome": "passed",
+    "plan_sha256": "43ca51bb94c4e7c0a60ce2325a3b01719cd8e060b948607b79e2445e85d4ae4c",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "prior_attempt_id": null,
+    "reason": "checks_completed",
+    "request_id": "temporal-waiter",
+    "request_sha256": "5044cf6c36a55b87f2c9e1491d2b34496019b8db8b5f6a618e0cf21f55e2f365",
+    "retry_reason": "initial",
+    "started_at": "2026-11-06T16:38:47.340711Z",
+    "telemetry_correlation": "trace-example",
+    "termination": "confirmed",
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "worker_id": "fixture-linux-worker"
+  },
+  "observation_close_cancelled": false,
+  "loss": {
+    "contract_version": "birbverify.v1",
+    "request_id": "worker-loss",
+    "request_sha256": "28f418c13eef311cdb4f0f8294b64ae363151fa94d28c14a2f8ee1f9bd2bc2e6",
+    "attempt_id": "worker-loss-eaf39e64ed4554f5",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "d38e03fa73330168dede009ee37d030a2928ca43",
+      "pr_head": "d38e03fa73330168dede009ee37d030a2928ca43",
+      "base": "d38e03fa73330168dede009ee37d030a2928ca43",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "43ca51bb94c4e7c0a60ce2325a3b01719cd8e060b948607b79e2445e85d4ae4c",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:36.769199Z",
+    "finished_at": "2026-11-06T16:38:37.160837Z",
+    "observed_before": "d38e03fa73330168dede009ee37d030a2928ca43",
+    "observed_after": null,
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "not_run",
+        "observation": "check did not finish before inconclusive",
+        "duration_ms": 0,
+        "artifacts": []
+      }
+    ],
+    "operation_id": "worker-loss.apply",
+    "operation_reconciled": false,
+    "outcome": "inconclusive",
+    "cleanup": "unknown",
+    "cancellation": "none",
+    "termination": "unknown",
+    "environment_release": "quarantined",
+    "reason": "worker_lost"
+  },
+  "cancel": {
+    "contract_version": "birbverify.v1",
+    "request_id": "cancelled",
+    "request_sha256": "629a51d740ea210baabbcc8772219003f5a3e872e2741bbca222fbabed9ec575",
+    "attempt_id": "cancelled-c5e3570a67f3959a",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+      "pr_head": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+      "base": "d38e03fa73330168dede009ee37d030a2928ca43",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "43ca51bb94c4e7c0a60ce2325a3b01719cd8e060b948607b79e2445e85d4ae4c",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:48.075371Z",
+    "finished_at": "2026-11-06T16:39:00.297096Z",
+    "observed_before": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+    "observed_after": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "not_run",
+        "observation": "check did not finish before cancelled",
+        "duration_ms": 0,
+        "artifacts": []
+      }
+    ],
+    "operation_id": "cancelled.apply",
+    "operation_reconciled": false,
+    "outcome": "cancelled",
+    "cleanup": "complete",
+    "cancellation": "acknowledged",
+    "termination": "confirmed",
+    "environment_release": "released",
+    "reason": "cancellation_acknowledged"
+  },
+  "events": [
+    {
+      "type": "RUN_STARTED",
+      "threadId": "cancelled",
+      "runId": "cancelled-c5e3570a67f3959a"
+    },
+    {
+      "type": "STATE_SNAPSHOT",
+      "snapshot": {
+        "verification": {
+          "contract_version": "birbverify.v1",
+          "request_id": "cancelled",
+          "attempt_id": "cancelled-c5e3570a67f3959a",
+          "state": "terminal",
+          "manifest": {
+            "contract_version": "birbverify.v1",
+            "request_id": "cancelled",
+            "request_sha256": "629a51d740ea210baabbcc8772219003f5a3e872e2741bbca222fbabed9ec575",
+            "attempt_id": "cancelled-c5e3570a67f3959a",
+            "attempt_number": 1,
+            "retry_reason": "initial",
+            "prior_attempt_id": null,
+            "correlation_id": "correlation-example",
+            "telemetry_correlation": "trace-example",
+            "candidate": {
+              "repository": "fixture",
+              "commit": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+              "pr_head": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+              "base": "d38e03fa73330168dede009ee37d030a2928ca43",
+              "kind": "head",
+              "artifact_sha256": null
+            },
+            "plan_sha256": "43ca51bb94c4e7c0a60ce2325a3b01719cd8e060b948607b79e2445e85d4ae4c",
+            "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+            "environment": "fixture-local",
+            "worker_id": "fixture-linux-worker",
+            "worker_capabilities": [
+              "linux-docker"
+            ],
+            "tools": [
+              "python-3.13.12",
+              "temporalio-1.35.0",
+              "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+            ],
+            "started_at": "2026-11-06T16:38:48.075371Z",
+            "finished_at": "2026-11-06T16:39:00.297096Z",
+            "observed_before": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+            "observed_after": "ffc680e4550b6e8fa5b35b27e59b1da373b20196",
+            "checks": [
+              {
+                "check_id": "value-check",
+                "outcome": "not_run",
+                "observation": "check did not finish before cancelled",
+                "duration_ms": 0,
+                "artifacts": []
+              }
+            ],
+            "operation_id": "cancelled.apply",
+            "operation_reconciled": false,
+            "outcome": "cancelled",
+            "cleanup": "complete",
+            "cancellation": "acknowledged",
+            "termination": "confirmed",
+            "environment_release": "released",
+            "reason": "cancellation_acknowledged"
+          }
+        }
+      }
+    },
+    {
+      "type": "RUN_FINISHED",
+      "threadId": "cancelled",
+      "runId": "cancelled-c5e3570a67f3959a"
+    }
+  ],
+  "temporal_history_event_types": [
+    1,
+    5,
+    6,
+    7,
+    10,
+    20,
+    5,
+    6,
+    7,
+    15,
+    11,
+    12,
+    5,
+    6,
+    7,
+    2
+  ]
+}

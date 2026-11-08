@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+import json
+import re
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+files = [root / "README.md", root / ".gitignore", root / "pyproject.toml", root / "uv.lock"]
+for directory in ("src", "tests", "fixtures", "contracts", "scripts", "docs"):
+    files.extend(
+        path
+        for path in (root / directory).rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts
+    )
+patterns = [
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
+    r"gh[pousr]_[A-Za-z0-9]{30,}",
+    r"sk-ant-[A-Za-z0-9_-]{30,}",
+    r"100\.83\.\d+\.\d+",
+    r"10\.0\.0\.\d+",
+]
+for path in files:
+    text = path.read_text()
+    assert not any(re.search(pattern, text) for pattern in patterns), path.relative_to(root)
+    assert path.name not in {"supervisor.key", "installation.json", "target.sqlite"}, path
+for path in (root / "docs/evidence").glob("*.json"):
+    value = json.loads(path.read_text())
+    assert value is not None
+print(f"Checked {len(files)} public files for secret markers and private addresses.")

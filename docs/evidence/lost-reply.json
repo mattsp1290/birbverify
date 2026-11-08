@@ -1,0 +1,76 @@
+{
+  "journey": 4,
+  "result": {
+    "contract_version": "birbverify.v1",
+    "request_id": "lost-reply",
+    "request_sha256": "11f9b2bf0da902cc7b4d9a4dc919842daa0a52604bf766ab3da18ee5f7506555",
+    "attempt_id": "lost-reply-a1",
+    "attempt_number": 1,
+    "retry_reason": "initial",
+    "prior_attempt_id": null,
+    "correlation_id": "correlation-example",
+    "telemetry_correlation": "trace-example",
+    "candidate": {
+      "repository": "fixture",
+      "commit": "82f60bc1a9bebe8bb0358cfb403acc740cda33b7",
+      "pr_head": "82f60bc1a9bebe8bb0358cfb403acc740cda33b7",
+      "base": "82f60bc1a9bebe8bb0358cfb403acc740cda33b7",
+      "kind": "head",
+      "artifact_sha256": null
+    },
+    "plan_sha256": "e7e654d702731165125049d6bca38af5e6ef2ea8ebb316ce1776d956431bf30f",
+    "policy_revision": "cccccccccccccccccccccccccccccccccccccccc",
+    "environment": "fixture-local",
+    "worker_id": "fixture-linux-worker",
+    "worker_capabilities": [
+      "linux-docker"
+    ],
+    "tools": [
+      "python-3.13.12",
+      "temporalio-1.35.0",
+      "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6"
+    ],
+    "started_at": "2026-11-06T16:38:30.311942Z",
+    "finished_at": "2026-11-06T16:38:30.827223Z",
+    "observed_before": "82f60bc1a9bebe8bb0358cfb403acc740cda33b7",
+    "observed_after": "82f60bc1a9bebe8bb0358cfb403acc740cda33b7",
+    "checks": [
+      {
+        "check_id": "value-check",
+        "outcome": "passed",
+        "observation": "{\"assertion\": \"value equals 42\", \"observed\": 42, \"passed\": true}\n",
+        "duration_ms": 436,
+        "artifacts": [
+          {
+            "id": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "kind": "observation",
+            "size": 65,
+            "sha256": "91e6d59fc1cba0c0a86f1d848885e4e08e569240e11409a6bd073f25190c724d",
+            "captured_at": "2026-11-06T16:38:30.795945Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          },
+          {
+            "id": "619e76e8bf27af67650b7bdcc5b2076c57ed62ee83e6de7eaf54deeb2dd23cba",
+            "kind": "command",
+            "size": 366,
+            "sha256": "619e76e8bf27af67650b7bdcc5b2076c57ed62ee83e6de7eaf54deeb2dd23cba",
+            "captured_at": "2026-11-06T16:38:30.799633Z",
+            "classification": "private",
+            "retention": "fixture-local-until-owner-deletes-v1"
+          }
+        ]
+      }
+    ],
+    "operation_id": "lost-reply.apply",
+    "operation_reconciled": true,
+    "outcome": "passed",
+    "cleanup": "complete",
+    "cancellation": "none",
+    "termination": "confirmed",
+    "environment_release": "released",
+    "reason": "checks_completed"
+  },
+  "operation_count": 1,
+  "target_value_at_commit": 1
+}

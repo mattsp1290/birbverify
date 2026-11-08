@@ -1,8 +1,8 @@
 # First milestone for Birbverify
 
-Status: scoped owner brief with dependency gates. Agree the concrete schema
-with consumers and obtain the owner's launch before implementation. No worker
-or staging proof exists yet.
+Status: owner-launched local fixture implementation and evidence now exist.
+The original scope and required journeys below remain the acceptance brief.
+Consumer integration and deployed staging proof remain separate gates.
 
 ## Outcome
 
