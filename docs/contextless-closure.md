@@ -72,7 +72,8 @@ mutation. It does not substitute for the final attributable absence observation.
 The adapter still enforces the request's check timeout and deadline.
 Mutating start uses the normal control timeout, so its reply may arrive after
 the procedure budget expires. The remaining budget bounds the read-only wait.
-Lease expiry still requires explicit supervisor recovery after cleanup.
+After the worker removes its container, lease expiry still quarantines the request.
+Supervisor closure performs target stop, cleanup and release.
 
 A lost reply for a mutating supervisor command also leaves that command unknown.
 The supervisor cannot resend it or infer settlement from current container state.

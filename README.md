@@ -32,3 +32,6 @@ separate one-attempt fixture profile, versioned target transport, and an
 installation-owned supervisor. Its [gate map](docs/contextless-closure-gates.md)
 distinguishes producer tests from later consumer integration. Existing consumers
 remain pinned to v1 until an explicit integration change.
+
+The [closure acceptance report](docs/contextless-closure-acceptance.md) records
+the executed source revision, independent review and remaining integration gates.
