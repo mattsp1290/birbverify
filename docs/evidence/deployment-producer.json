@@ -1,0 +1,453 @@
+{
+  "scope": "Producer component qualification on disposable Linux ARM64. Deployment release remains held.",
+  "verified_source": "6964db62d3f719d9c74b14fb867c8326e2a6f1ae",
+  "receipts_source": "8a85d270bdd5cdf5083e4d02470d7225d2f1f69f adds the opt-in dispatch test and documentation only.",
+  "suites": [
+    {
+      "command": "scripts/verify",
+      "tests": 14,
+      "beans_fixture": true
+    },
+    {
+      "command": "scripts/verify-closure",
+      "source_manifest_sha256": "b8860ce500956de1944a4578cb9fd5391caee060f5881a0668039203b48f07ef",
+      "worker_image": "sha256:f6008cf505d135382576aa6fd4db290a80b8103355a953b4905da04b4580d132",
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 77
+    },
+    {
+      "command": "scripts/verify-kubernetes",
+      "tests": 41,
+      "receipt_digests": {
+        "application.json": "d3d7c93ffe4d51c7f890745bbffbca463c710c483619dee478dc88661d280c8f",
+        "failures.json": "7147d24ce550f6b94b2e54312d74db6bb305653c70167e7617ec5310d61cbf71"
+      }
+    },
+    {
+      "command": "pytest tests/test_account_auth_inventory.py plus deployment activity/audit/bootstrap/journal/mutators/ownership",
+      "tests": 133
+    }
+  ],
+  "native_settlement": {
+    "scope": "native ReplicaSet controller Pod CREATE settlement only",
+    "cluster": "birbverify-bsmn-1794354663-4008193",
+    "epoch": "50c55bc6-a569-4b81-85e1-93e9fdec364e",
+    "admission_uid": "b72b0603-021c-4470-affa-7068993fcab4",
+    "empty_pod_list_while_sealed_pending": true,
+    "restart_preserved_pending": true,
+    "persisted_after_seal": true,
+    "missing_audit_kept_pending": true,
+    "terminal_audit_id": "6ed87fa1-954e-4b95-8c1c-96a2dde47b9d",
+    "audit_event_sha256": "2222d38dfab4670a25aab0745cd12a31492551d28ea5c8c8c9c0243bddc69ef1",
+    "audit_receiver_client_cert_sha256": "f894a0bfe6a52d2b2854b5bf91d3dcaf8946d4baea28b520f1c6e48f6ae6f81b",
+    "cluster_uid": "bf7ab5e3-2d46-44bf-8d6a-32b3265501d5",
+    "terminal_audit_annotation": "settlement.birbverify.test/intent-b72b0603-021c-4470-affa-7068993fcab4",
+    "persisted_pod_uid": "c4194758-54d3-4218-bfc5-999e324c62ac",
+    "settled": {
+      "audit_id": "6ed87fa1-954e-4b95-8c1c-96a2dde47b9d",
+      "object_uid": "c4194758-54d3-4218-bfc5-999e324c62ac",
+      "resource_version": "530",
+      "termination_proven": false
+    },
+    "matching_control_confirmed_mutator_active": true,
+    "nonmatching_unreachable_mutator_coexisted": true,
+    "mutator_pins_rechecked": true,
+    "mutator_selector_drift_rejected_by_classifier": true,
+    "mutator_drift_admission_enforcement_proven": false,
+    "mutator_configuration_uids": [
+      "aa570c7f-ab4c-4739-abdd-ed6fd48007ed"
+    ],
+    "postseal_create_denied": true,
+    "outsider_denied": true,
+    "release_proven": false,
+    "termination_proven": false,
+    "fixture_image_id": "sha256:fc784198fec31412bcadec559ebe0fec1c3d6db4d3a6b58c597d8f80e25e7e51",
+    "source_sha256": {
+      "src/birbverify/deployment_journal.py": "1d355e491d063878fc2a70a494f7eb65867f356774f8421a8b1089ad0845378f",
+      "src/birbverify/deployment_audit.py": "d42f90d8a1e809b360e7bed6794fe074ac053d28691996a7c3108fef27a43e01",
+      "src/birbverify/deployment_http.py": "89e2ff5c5138cbae8b49021f7080292fa23ce9ce05679296513988d8578cf227",
+      "fixtures/deployment_audit_pki.py": "82cd08a9996c291e318ba6c5a256179ad080da10774d5e3dc97d8fd064bfb058",
+      "fixtures/deployment.Dockerfile": "ad35b061fb4621d7460d918f5207d16280d780777175990eba118073b5436e68",
+      "pyproject.toml": "2f2003cbcb95d1465644318ba665e489e2eb02babff423e7dfc579a559d436fb",
+      "uv.lock": "a0db179c18b8b5ddfb6d12d64122b47b70bb7ec6531ef7d5d9ecff1afe608163",
+      "src/birbverify/deployment_mutators.py": "a80e7a5ded8f121bc7779b8bf28ed6e8c125704f20ed4323df5fdf4038d04701",
+      "src/birbverify/contract.py": "925b71c82f27b2c3063ba2c3f786d1ec7b5b18ff98c5dea787b5f709f4e43617",
+      "fixtures/deployment_admission_fixture.py": "a87351b13ccf9ffed56270e6f0c4eab232b72e526d463636bf19b03a437c1b14",
+      "tests/test_deployment_settlement_journey.py": "99f42f66955fac7b953928118ac983899152f3ec548dfd3429be9e82bf54dd9c",
+      "scripts/verify-deployment-settlement": "0a23fda3688b94bcefaee8a6dddd74b01cdadffcdd82320f67d5d5dcb495dcb8"
+    },
+    "deployment_uid": "177a9051-1180-4580-bf8a-f1797bf1e58e",
+    "replicaset_uid": "127fd081-a49e-4f2d-82de-c2b3bd56e7e3",
+    "pause_image": "registry.k8s.io/pause:3.10@sha256:ee6521f290b2168b6e0935a181d4cff9be1ac3f505666ef0e3c98fae8199917a",
+    "source_revision": "6964db62d3f719d9c74b14fb867c8326e2a6f1ae",
+    "source_dirty": false
+  },
+  "guard": {
+    "inventory_sha256": "b8e587e6df8da487d7c00df0820f1f9dc6d9008b7302987ec2115a72792375e8",
+    "admission": {
+      "validatingadmissionpolicies/bv-account-target-namespace": {
+        "uid": "a1a2c1a3-87a1-40cf-a6fe-553b7b3d5f4a",
+        "spec_sha256": "fe819abcec3468dc569ae3399313f6d4bb0743c7a4b9ab00488205a0e7981342"
+      },
+      "validatingadmissionpolicybindings/bv-account-target-namespace": {
+        "uid": "12094584-4c25-4389-ab2c-b569ab89856b",
+        "spec_sha256": "e27bbf49b46e8b21b41c0ed1f26b0d78991b463d679c5913f7c2a7f385cfd361"
+      },
+      "validatingadmissionpolicies/bv-account-target-validator": {
+        "uid": "8f5126ae-b46d-4b59-b622-5bee430506ea",
+        "spec_sha256": "bcd1d1ab341dbbd9d9811d5fb9cef413187bbe9b9aba13eaf29b9c6bb360d693"
+      },
+      "validatingadmissionpolicybindings/bv-account-target-validator": {
+        "uid": "19f9a440-0fa9-4c39-be0d-6e0f333cbe4f",
+        "spec_sha256": "701846e487ee9165e8be6d91598cdd9220a0de4614c0edf97d696ab7fa332921"
+      },
+      "validatingadmissionpolicies/bv-account-target-mutators": {
+        "uid": "f7e94c04-352b-46d7-bd28-10b197c35d1a",
+        "spec_sha256": "742547679004731ce3dac32655c094e261386094c729163388e1598def83e347"
+      },
+      "validatingadmissionpolicybindings/bv-account-target-mutators": {
+        "uid": "ef7d2900-ae7f-4fd4-8d01-0c13150cb7f4",
+        "spec_sha256": "1d90cc8e48dfe940641af7d7e6490546de037b4ec968b7987197634ac74b8a0f"
+      }
+    },
+    "scope": "namespace and admission configuration guard",
+    "node_image": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+    "cluster_uid": "4054d819-a707-4379-b892-b0c4d4e27500",
+    "namespace_uid": "de14c5c9-974d-4af0-b7ed-6a33f2eda607",
+    "manifest_sha256": "6f6bb770edb0124266d58972f501cf312aec52335ffdf6bcad60465f5b092433",
+    "source_revision": "6964db62d3f719d9c74b14fb867c8326e2a6f1ae",
+    "source_dirty": false,
+    "source_sha256": {
+      "src/birbverify/deployment_guard.py": "934986be74bc50b874476baf5f17a8d96db22f26c21e969f094f7839a8230e30",
+      "src/birbverify/deployment_mutators.py": "a80e7a5ded8f121bc7779b8bf28ed6e8c125704f20ed4323df5fdf4038d04701",
+      "tests/test_deployment_guard_journey.py": "ff1971fd114e69c9412388d7ca0ef372af9b74589bba9aa141925d608d1d2a32",
+      "scripts/verify-deployment-guard": "b2d02e8d9b3f3a4f921d01aed0d498adeb37044a9144da27eda39855ee20bf5a"
+    }
+  },
+  "flux": {
+    "scope": "Flux Helm install of one owned ConfigMap",
+    "source_revision": "6964db62d3f719d9c74b14fb867c8326e2a6f1ae",
+    "source_dirty": false,
+    "image_id": "sha256:fc784198fec31412bcadec559ebe0fec1c3d6db4d3a6b58c597d8f80e25e7e51",
+    "node": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+    "flux_images": {
+      "ghcr.io/fluxcd/source-controller:v1.6.2": "11c8e14df885eff86586533d9941293ec8a1e9fff71bacf119edc79fdf3c63e3",
+      "ghcr.io/fluxcd/helm-controller:v1.3.0": "db55d9d9f9b5106acd8c21da6916b8e285fcfc5572f214361ececd1a8571a4f0"
+    },
+    "helm_release_uid": "5ab609e4-87c0-48d5-b296-f5edccb855e8",
+    "helm_revision": "0.1.0",
+    "flux_manifest_sha256": "8bf3de711a1f6226e550163470ea0115afed2e126b368d35ddd28e5bf80134ad",
+    "chart_sha256": "4068c0d0788140eef8df53f1e46bd2fe41cd75b50721a6a1629b5db1ef07deb6",
+    "installation_sha256": "34046e6c301dfce2d79e0c243c260ba44e4eb6a45737fc5268d821f954565fa9",
+    "installation_guard": {
+      "inventory_sha256": "e12ee9d665e48dfa7d17d92b884f9f01cbbcce0854874d1248cced0050d09df2",
+      "admission": {
+        "validatingadmissionpolicies/bv-proof-target-namespace": {
+          "uid": "0b1217cd-5130-415b-9c21-52fd9c23d88a",
+          "spec_sha256": "3088ecd08e0750d5aafa8868e5cf8f0eede62cedacb3a0befd468a8395504bff"
+        },
+        "validatingadmissionpolicybindings/bv-proof-target-namespace": {
+          "uid": "4087ba07-22ab-43ea-9590-9b8597708026",
+          "spec_sha256": "b44fab90dbc221e793a0d5b6f8e0cb41c4ef93f733c48b0601d1fcc0b3decb47"
+        },
+        "validatingadmissionpolicies/bv-proof-target-validator": {
+          "uid": "05e50c5c-eae5-436e-b985-b0b9ad23ad4b",
+          "spec_sha256": "e93266227ed36f97f5e0157f28ec405fc5e26091c1e96f13f2993b9a4bdfa8dd"
+        },
+        "validatingadmissionpolicybindings/bv-proof-target-validator": {
+          "uid": "b8dd55ad-dc61-40d3-a803-e2173a91d04c",
+          "spec_sha256": "285afe92fbc40c7ec582c94e7bbea98fb134ac2271b5d7f6b5407288929b4a33"
+        },
+        "validatingadmissionpolicies/bv-proof-target-mutators": {
+          "uid": "44307376-9406-419a-9263-375e148a54b8",
+          "spec_sha256": "f1c113c0229195d17f5fadb4da7d497c94c297e4ddee29aeb076bb439764a616"
+        },
+        "validatingadmissionpolicybindings/bv-proof-target-mutators": {
+          "uid": "bfe6d60e-108e-40eb-ab09-387f2466e141",
+          "spec_sha256": "cddd79e056dea98155a34c9abb34dbc932b99a4f1dee5c4b9dc3fda062671370"
+        }
+      }
+    },
+    "closure": {
+      "request_id": "flux-proof",
+      "request_sha256": "b470a715ff53042721ad9c31c2f26ffccd16e4116031466d4826eb7312e740c0",
+      "epoch": "d8b2dcc9-537c-4816-b244-7ee4e716593f",
+      "reason": "completed",
+      "schema_version": "birbverify.deployment.closure.progress.v1",
+      "installation_sha256": "34046e6c301dfce2d79e0c243c260ba44e4eb6a45737fc5268d821f954565fa9",
+      "cluster_uid": "e956dc65-9ee2-4950-aaa8-e9540fa5622c",
+      "namespace_uid": "42b64d2f-07e7-40e4-8c25-a8a247940a5a",
+      "state": "sealed",
+      "effects": [
+        {
+          "slot": "release-marker",
+          "state": "settled",
+          "object_uid": "d86d1a73-64d9-4994-962e-5569637c20e1",
+          "audit_id": "3c36c294-36ab-4df1-bc61-4c2192b9d18b",
+          "event_sha256": "3bbc3f94b6860e9f2e2eabadff5df0f1eed8c43200348db68348739671e42fff",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        }
+      ],
+      "account_activity_state": "absent",
+      "installation_obligations": [
+        "writer_and_admission_integrity",
+        "reconciliation_quiescence",
+        "baseline_restoration"
+      ],
+      "release_authorized": false
+    }
+  },
+  "application_and_restore": {
+    "assertions": {
+      "account_create": "passed",
+      "authenticated_identity": "passed",
+      "invalid_credentials_rejected": "passed",
+      "login_success": "passed",
+      "unauthenticated_access_rejected": "passed"
+    },
+    "fixture_sha256": {
+      "deployment_activity_journey.py": "ec5f68b15fddc032c1993a06984ec2c44d791bab4b3482887912b3ab746b87e1",
+      "deployment_storage_fixture.py": "881c6401215c98a17918b48c718a08516f7c0834299afe8292cba4a898b00400"
+    },
+    "images": {
+      "api": "sha256:3031f0e4f0effba670ba70c2be0e7e3f0226147fedfff62359cd1476f51b45f3",
+      "openfga": "sha256:3703d8a6a5f9fa494f1412fc326fe4ba2dc36796e1c821b0dead2ca5433178aa",
+      "openfga-postgres": "sha256:29e645e20571728f22df398b9954bb6c1cefec390d99ed4e26308fc2f52d6a37",
+      "postgres": "sha256:29e645e20571728f22df398b9954bb6c1cefec390d99ed4e26308fc2f52d6a37"
+    },
+    "platform": "aarch64",
+    "source_revision": "503d3bc238e2093eb0e098ecbe87b7e11ed16b4f",
+    "storage": {
+      "archive_sha256": {
+        "openfga-bootstrap-data": "f15079b0367c07f2472fde45ca8617acd93d81f8ae286b8522a496397e29e9f2",
+        "openfga-postgres-data": "d115c9f9a66f1ae8158ec25a12f9faf8a60af1737618a79d14e804be8c2c4d42",
+        "postgres-data": "fb0b79eee6cdc8c994928e5434867143b5badd4a6a0d13b55f584292b5dcc5c1"
+      },
+      "archiver": "python@sha256:a58daefb915e1e03ad48f3ca4df8832065412c5c35cacb9d39f4229184de12b6",
+      "baseline_counts": {
+        "accounts": 0,
+        "sessions": 0
+      },
+      "baseline_stops": {
+        "api": {
+          "container_id": "d9b01559fa3d70c03aa47132176d6236e52043daeefddf28a4226dda557a632d",
+          "exit_code": 137,
+          "finished_at": "2026-11-10T23:51:27.744501586Z",
+          "image": "sha256:3031f0e4f0effba670ba70c2be0e7e3f0226147fedfff62359cd1476f51b45f3",
+          "state": "exited"
+        },
+        "authz-bootstrap": {
+          "container_id": "3ce89f1a87c5301ab46e86847f55486ceccfa8f7cd15fed333634570dfef1ac6",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:18.31612865Z",
+          "image": "sha256:3031f0e4f0effba670ba70c2be0e7e3f0226147fedfff62359cd1476f51b45f3",
+          "state": "exited"
+        },
+        "authz-state-init": {
+          "container_id": "0cc1f760451044325d86f909ffabc8f3cff8dea22d2eb00d8ed0f69c77a5ea04",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:05.861144637Z",
+          "image": "sha256:3031f0e4f0effba670ba70c2be0e7e3f0226147fedfff62359cd1476f51b45f3",
+          "state": "exited"
+        },
+        "openfga": {
+          "container_id": "e195592c8a8a131a0785e6f3af7dfabbbb6d1fa8ff9749b17710b95f623365b5",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:27.995372983Z",
+          "image": "sha256:3703d8a6a5f9fa494f1412fc326fe4ba2dc36796e1c821b0dead2ca5433178aa",
+          "state": "exited"
+        },
+        "openfga-migrate": {
+          "container_id": "29b9d21581f5321f3bfa9f3042ce34d36583ac5f74e51a68edf0c1d6edc9c058",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:11.753928533Z",
+          "image": "sha256:3703d8a6a5f9fa494f1412fc326fe4ba2dc36796e1c821b0dead2ca5433178aa",
+          "state": "exited"
+        },
+        "openfga-postgres": {
+          "container_id": "16f87ff63ae5a69b822f23b1bb11dfb60f77c57ad492be6baa2bb34a5cac033e",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:28.417947673Z",
+          "image": "sha256:29e645e20571728f22df398b9954bb6c1cefec390d99ed4e26308fc2f52d6a37",
+          "state": "exited"
+        },
+        "postgres": {
+          "container_id": "66d9619522c9f1e34d7399a6476862835aa813bb7652f5c551dae505fefc20d7",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:28.426701125Z",
+          "image": "sha256:29e645e20571728f22df398b9954bb6c1cefec390d99ed4e26308fc2f52d6a37",
+          "state": "exited"
+        }
+      },
+      "post_assertion_counts": {
+        "accounts": 1,
+        "sessions": 1
+      },
+      "release_authorized": false,
+      "restored_counts": {
+        "accounts": 0,
+        "sessions": 0
+      },
+      "restored_sha256": {
+        "openfga-bootstrap-data": "f15079b0367c07f2472fde45ca8617acd93d81f8ae286b8522a496397e29e9f2",
+        "openfga-postgres-data": "d115c9f9a66f1ae8158ec25a12f9faf8a60af1737618a79d14e804be8c2c4d42",
+        "postgres-data": "fb0b79eee6cdc8c994928e5434867143b5badd4a6a0d13b55f584292b5dcc5c1"
+      },
+      "restored_volumes": {
+        "openfga-bootstrap-data": {
+          "created_at": "2026-11-10T23:51:56Z",
+          "name": "aftl-auth-b4603a6880c8d63c-restore_openfga-bootstrap-data"
+        },
+        "openfga-postgres-data": {
+          "created_at": "2026-11-10T23:51:56Z",
+          "name": "aftl-auth-b4603a6880c8d63c-restore_openfga-postgres-data"
+        },
+        "postgres-data": {
+          "created_at": "2026-11-10T23:51:56Z",
+          "name": "aftl-auth-b4603a6880c8d63c-restore_postgres-data"
+        }
+      },
+      "scope": "disposable Compose restore to new volumes",
+      "source_volumes": {
+        "openfga-bootstrap-data": {
+          "created_at": "2026-11-10T23:51:05Z",
+          "name": "aftl-auth-b4603a6880c8d63c_openfga-bootstrap-data"
+        },
+        "openfga-postgres-data": {
+          "created_at": "2026-11-10T23:51:05Z",
+          "name": "aftl-auth-b4603a6880c8d63c_openfga-postgres-data"
+        },
+        "postgres-data": {
+          "created_at": "2026-11-10T23:51:05Z",
+          "name": "aftl-auth-b4603a6880c8d63c_postgres-data"
+        }
+      },
+      "writer_stops": {
+        "api": {
+          "container_id": "d9b01559fa3d70c03aa47132176d6236e52043daeefddf28a4226dda557a632d",
+          "exit_code": 137,
+          "finished_at": "2026-11-10T23:51:54.547564742Z",
+          "image": "sha256:3031f0e4f0effba670ba70c2be0e7e3f0226147fedfff62359cd1476f51b45f3",
+          "state": "exited"
+        },
+        "authz-bootstrap": {
+          "container_id": "3ce89f1a87c5301ab46e86847f55486ceccfa8f7cd15fed333634570dfef1ac6",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:44.57039298Z",
+          "image": "sha256:3031f0e4f0effba670ba70c2be0e7e3f0226147fedfff62359cd1476f51b45f3",
+          "state": "exited"
+        },
+        "authz-state-init": {
+          "container_id": "0cc1f760451044325d86f909ffabc8f3cff8dea22d2eb00d8ed0f69c77a5ea04",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:32.259681876Z",
+          "image": "sha256:3031f0e4f0effba670ba70c2be0e7e3f0226147fedfff62359cd1476f51b45f3",
+          "state": "exited"
+        },
+        "openfga": {
+          "container_id": "e195592c8a8a131a0785e6f3af7dfabbbb6d1fa8ff9749b17710b95f623365b5",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:54.823997777Z",
+          "image": "sha256:3703d8a6a5f9fa494f1412fc326fe4ba2dc36796e1c821b0dead2ca5433178aa",
+          "state": "exited"
+        },
+        "openfga-migrate": {
+          "container_id": "29b9d21581f5321f3bfa9f3042ce34d36583ac5f74e51a68edf0c1d6edc9c058",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:38.027920281Z",
+          "image": "sha256:3703d8a6a5f9fa494f1412fc326fe4ba2dc36796e1c821b0dead2ca5433178aa",
+          "state": "exited"
+        },
+        "openfga-postgres": {
+          "container_id": "16f87ff63ae5a69b822f23b1bb11dfb60f77c57ad492be6baa2bb34a5cac033e",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:55.291150291Z",
+          "image": "sha256:29e645e20571728f22df398b9954bb6c1cefec390d99ed4e26308fc2f52d6a37",
+          "state": "exited"
+        },
+        "postgres": {
+          "container_id": "66d9619522c9f1e34d7399a6476862835aa813bb7652f5c551dae505fefc20d7",
+          "exit_code": 0,
+          "finished_at": "2026-11-10T23:51:55.305223724Z",
+          "image": "sha256:29e645e20571728f22df398b9954bb6c1cefec390d99ed4e26308fc2f52d6a37",
+          "state": "exited"
+        }
+      }
+    },
+    "suite_sha256": "6c14602bfa28c5d4a79fe8216bde60705fc74634b805e95ed03beadd0975cab6"
+  },
+  "worker_dispatch": {
+    "scope": "Authenticated packaged activity rejection with zero settled workloads",
+    "temporal_cli_sha256": "1d08e4e0ec7ce5397681aefe14a4ee9b738a56ca974974bfaf5a18ea922c0bc5",
+    "tls_frontend_image": "haproxy@sha256:1c3568e520453cc8ba98c39501febcf450429c80e6cc27ecad779961d76e597c",
+    "worker_image": "sha256:5f74849f2128c3097e13d9b31faddcc8a7e6c3dffd460e9d3a5b1621ad103c27",
+    "worker_cert_sha256": "16e1323fdc80c00ec99820b7aeab9b7b79df6cb565ee2a7da2371d60905aa4fb",
+    "worker_identity": "worker",
+    "workflow_id": "workflow",
+    "workflow_run_id": "01a1c7e1-8ee9-7e93-b5c1-c99befe85540",
+    "epoch": "cd7ca698-5df2-4771-aed5-017e6d604b9e",
+    "request_sha256": "a7e5aedea51db37b31d1301557e626378c106603869e3f5336c6355b881890a3",
+    "operation_count": 0,
+    "unauthenticated_client_denied": true,
+    "result": "account_operation_unavailable",
+    "source_revision": "8a85d270bdd5cdf5083e4d02470d7225d2f1f69f",
+    "source_dirty": false
+  },
+  "accepted_chart": {
+    "refusal_metadata": {
+      "audit_id": "7ca7c222-2747-4f9b-9101-a8bb76e083c0",
+      "verb": "create",
+      "resource": "secrets",
+      "namespace": "proof-target",
+      "code": 400,
+      "stage": "ResponseComplete"
+    },
+    "scope": "First Helm storage write under a same-namespace, all-namespaced-writes disposable fence",
+    "source_revision": "503d3bc238e2093eb0e098ecbe87b7e11ed16b4f",
+    "source_lock_sha256": "e1dfd3c6230c75d97e2986f72a35b017a6d23104d5abe08b7ed7a848c223200e",
+    "verified_source_files": 46,
+    "helm_version": "v3.22.1+gd6c1a0e",
+    "helm_sha256": "2bd1b649ef89175bc0ae1e0fa7de7e0583a5b0401de9896b644b8acbcae1ba64",
+    "openfga_chart_sha256": "f4a029a7b65b3e00a603a1b3f1be2b07b8ff1d00eab84639734aa775e3db6e59",
+    "namespace": "proof-target",
+    "render_sha256": {
+      "birbparty-data": "41e9aed38ddc30a1c765d01406dcde4952fa1261539a783160c7991b48e0826e",
+      "birbparty": "4d1ec8da2e04bf597a07e4adddff873a7e2bd66a1da61b519cd7e582fb4dc21b"
+    },
+    "rendered_objects": 24,
+    "journal_intents": 0,
+    "apiserver_persisted_secrets": 0,
+    "observed_pods": 0,
+    "installed_policy_sha256": "4a9bcdbfec591ee0d986eaf1a2e4a3d9ea3b93cfee3ca48faee2d31384c221af",
+    "kind_node_image": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+    "service_image_id": "sha256:5f74849f2128c3097e13d9b31faddcc8a7e6c3dffd460e9d3a5b1621ad103c27",
+    "producer_base": "8a85d270bdd5cdf5083e4d02470d7225d2f1f69f",
+    "producer_dirty": false,
+    "probe_sha256": "b8a961242dca4d7f53475b51f69d535e9749806f98cfc5e8fb3f738b5b5e6716",
+    "runtime_sources": {
+      "deployment_activity.py": "6ebfe9b6e2e356dec47d6d9fa863502f26c38281082042e02e3201e5173e4f31",
+      "deployment_activity_contract.py": "6a8c62f06bd88ed1e3063438576870c07b99099a60a909256ed95316e1eb2f52",
+      "deployment_activity_runtime.py": "3b2bd4c52ffb18c46b94f58b268d150700371f20d0be87f4b97c1d44208c50a0",
+      "deployment_audit.py": "d42f90d8a1e809b360e7bed6794fe074ac053d28691996a7c3108fef27a43e01",
+      "deployment_bootstrap.py": "b40bd5b5a9fb6d402b210a1db162baf0fede4ad769090c302bff695279a13293",
+      "deployment_guard.py": "934986be74bc50b874476baf5f17a8d96db22f26c21e969f094f7839a8230e30",
+      "deployment_http.py": "89e2ff5c5138cbae8b49021f7080292fa23ce9ce05679296513988d8578cf227",
+      "deployment_journal.py": "1d355e491d063878fc2a70a494f7eb65867f356774f8421a8b1089ad0845378f",
+      "deployment_mutators.py": "a80e7a5ded8f121bc7779b8bf28ed6e8c125704f20ed4323df5fdf4038d04701",
+      "deployment_ownership.py": "59287dd38fa7d24cefdaa058dc1be7d3d5a807ac7832208c9f039a267aec20f9",
+      "deployment_ownership_observe.py": "65e595c9d124586e11338d158266a911dcb81b603f716d0d7e5fe6b3a8a265b6",
+      "deployment_ownership_server.py": "d6b79497593276845d265c4bdf18e7e7b5443c817dca7aaed1e191f5566bf5b6"
+    },
+    "outcome": "denied",
+    "helm_error": "Error: INSTALLATION FAILED: create: failed to create: admission webhook \"ownership.birbverify.test\" denied the request: unsupported object kind",
+    "second_release_attempted": false,
+    "account_activity_dispatched": false,
+    "release_authorized": false,
+    "packaged_sources_match_commit": true
+  }
+}

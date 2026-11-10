@@ -49,3 +49,24 @@ source inventory lists development API and UI tags and has no qualified OCI
 supply for those two roles. Keep those production bindings open until
 `birbparty-i3za` supplies the reviewed artifacts. A new epoch or candidate on
 the same physical target requires a separate reviewed transition.
+
+## Executed Linux checks
+
+The [qualification receipts](evidence/deployment-producer.json) bind the
+implementation, fixture images, API-server completion, Flux release, workload
+observations, application checks and disposable restore. The configured suites
+passed 14 legacy checks, 77 closure checks including the legacy cases, and
+41 bare-Pod Kubernetes checks. The inventory and deployment unit suite passed
+133 checks. The native-controller and guard journeys also passed separately.
+
+Independent review identified two defects before publication. Normal service
+startup could provision a missing journal, and the assertion client accepted
+ambiguous JSON. The installer now reserves a new path exclusively. All service
+starts require its independently saved epoch. The assertion client rejects
+duplicate response fields. A second review verified both corrections.
+
+On the exact accepted charts, Helm's first release Secret CREATE received an
+HTTP 400 from the deployment fence. The receipt records zero accepted writes,
+zero persisted Secrets, and zero Pods for that run. The packaged Temporal worker
+separately rejected a request with zero settled workloads. Neither run produced
+a passing deployed account result. Birbforge must retain the owner.
