@@ -45,3 +45,16 @@ The fixture stops the four services and checks exit evidence for them and the th
 After a second stop, the fixture extracts each archive into an empty volume in a separate, newly created Compose project. It compares deterministic archive hashes over file contents, paths, modes, ownership, modification times, ACLs and supported extended attributes. It restarts the restored application stack, waits for health and checks that the account and session counts have returned to zero. The fixture removes both projects and their volumes on exit. Its private temporary directory holds the archives during the run.
 
 The receipt contains both volume identities, stopped container IDs, exit evidence, image IDs, archive hashes and aggregate account/session counts. Its authority is limited to the disposable Compose recovery. The Kubernetes tunnel, authenticated Temporal dispatch, controller termination and installation-specific retained-PVC baseline still need a combined deployment proof.
+
+To test the packaged worker's rejection path, run the opt-in dispatch check with
+the checksum-verified Temporal CLI from `scripts/setup` and a local Docker engine.
+
+```sh
+BIRBVERIFY_DISPATCH_EVIDENCE="$PWD/.proof/dispatch.json" \
+  uv run pytest -q tests/test_deployment_activity_dispatch.py
+```
+
+The check submits a workflow over mutual TLS with zero settled workloads. It
+requires the worker's failure in Temporal history and an empty account-operation
+table. The fixture trusts both client certificates. Production namespace and
+queue authorization require separate Birbhomes installation evidence.
