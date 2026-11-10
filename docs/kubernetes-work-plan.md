@@ -7,7 +7,7 @@
 - [x] Phase D: Keep the audit trail.
 - [x] Phase E: Verify and hand back.
 
-The completion predicate is a real application journey on disposable kind,
+Completion requires a real application journey on disposable kind,
 outsider denial by admission, worker-loss and cancellation closure, settled
 in-flight writes before release, persistent quarantine for unknown delivery,
 versioned receipts, and an implementation commit. Shared staging is excluded.
@@ -28,9 +28,8 @@ untracked writes and remain outside this profile. The fixture uses direct Pod
 networking. Service and EndpointSlice routing are not claimed. A gateway
 finalizer preserves terminal status before the final API deletion.
 
-Throughput checkpoint. The critical path was the real admission and termination
-boundary. Contract and target tests preceded live application and failure
-journeys. Independent code review followed those journeys. Final evidence pins
+Admission and termination checks determined the order of work. Contract and
+target tests preceded live application and failure journeys. Independent code review followed those journeys. Final evidence pins
 the implementation commit separately from the report commit.
 
 Model the Domain produced a separate Kubernetes contract and durable effect
@@ -40,18 +39,19 @@ HTTP calls, SIGKILL of a credentialless worker, and runtime container inspection
 Configured model families were unavailable through the collaboration tool, so
 architecture seats used the inherited model. Cursor-only deslop, control-cli,
 and Comment Sicko were unavailable. Ruff, real CLI execution, and independent
-comment review supplied explicit substitutes. No unavailable tool execution is
-claimed. This issue requests a commit and evidence, not deployment. Forgejo,
-Ferry enrollment, Flux desired state, and shared staging remain later gates.
+comment review supplied explicit substitutes. This issue covers an
+implementation commit and evidence. Forgejo, Ferry enrollment, Flux desired
+state, and shared staging remain later gates.
 
 An attempted Claude Opus read-only review failed with an invalid API key before
 reviewing files. Independent inherited-model review found and drove fixes for
 raw error disclosure, policy/plan approval, and admitted image substitution.
-The user then authorized retrying with the API key unset. Claude Opus completed the cross-model review. The decision log explicitly withdraws
-estimated timestamp precision in its reconstructed opening rows.
+The user then authorized retrying with the API key unset. Claude Opus completed
+the review. The decision log withdraws estimated timestamp precision in its
+reconstructed opening rows.
 
 Claude found three hardening gaps. Added capabilities and host ports now fail
 profile validation. Admission pins now include object UID and generation.
 `sealed_unadmitted` keeps a cancelled request closed without retaining unrelated
-work. Mutating admission policies are rejected alongside webhooks. The initial
-implementation pin is superseded after these fixes and another live proof.
+work. Mutating admission policies are rejected alongside webhooks. The final
+live proof pins the corrected implementation.

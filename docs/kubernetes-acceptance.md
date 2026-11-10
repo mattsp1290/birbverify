@@ -12,7 +12,7 @@ permission, an unlisted target object, namespace mutation, and exec access.
 Failure journeys kill a socket-only worker, close after cancellation, hold an
 accepted API response while closure waits, and discard an accepted response.
 The last case stays quarantined after target restart. A successor is admitted
-only after confirmed closure. Runtime container inspection corroborates the
+only after confirmed closure. Runtime container inspection confirms the
 kubelet termination evidence for the released Pod UID.
 
 The target is the only credential owner and journals every effect before API
@@ -30,8 +30,8 @@ The producer note on birbforge-yrnb identifies the contract and implementation.
 The proof covers direct Pod networking on a trusted pinned kubelet. It does not
 establish safe Deployment, Flux, Service or EndpointSlice controller writes.
 No shared-staging resources were read or mutated. Forgejo/Ferry publication and
-Birbhomes desired-state enrollment remain later work. The local branch contains
-implementation and evidence commits; no remote PR or deployment is claimed.
+Birbhomes desired-state enrollment remain later work. Publishing this adapter
+does not deploy it.
 
 ## Executed checks
 
@@ -45,7 +45,7 @@ implementation and evidence commits; no remote PR or deployment is claimed.
   The local image ID is `sha256:b3bfc9eef3252c6e0d54fd81910b9665f055bd1b23f88b860fc3a522fb84c987`.
 
 The machine-readable report is [kubernetes-acceptance.json](evidence/kubernetes-acceptance.json).
-It binds the exact source revision, request, image, namespace UID and receipts.
+It records the exact source revision, request, image, namespace UID and receipts.
 The exported request and receipt examples are under `contracts/kubernetes/v1`.
 Private run output remains under ignored `.proof/kubernetes/`.
 
