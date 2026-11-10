@@ -1,0 +1,21 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: ownership.birbverify.test
+webhooks:
+- name: ownership.birbverify.test
+  admissionReviewVersions: [v1]
+  sideEffects: NoneOnDryRun
+  failurePolicy: Fail
+  clientConfig:
+    url: https://ADMISSION_SERVER:8443/v1/admit
+    caBundle: CA_DATA
+  namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: proof-target
+  rules:
+  - apiGroups: [""]
+    apiVersions: [v1]
+    resources: [configmaps]
+    operations: ["*"]
+    scope: Namespaced

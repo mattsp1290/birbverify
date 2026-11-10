@@ -1,0 +1,49 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "epoch": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Epoch",
+      "type": "string"
+    },
+    "installation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Installation Sha256",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "birbverify.deployment.owner.v1",
+      "default": "birbverify.deployment.owner.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "enum": [
+        "active",
+        "sealed",
+        "quarantined"
+      ],
+      "title": "State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "request_sha256",
+    "installation_sha256",
+    "epoch",
+    "state"
+  ],
+  "title": "Owner",
+  "type": "object"
+}

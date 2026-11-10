@@ -1,0 +1,27 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "epoch": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Epoch",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "request_sha256",
+    "epoch"
+  ],
+  "title": "Invocation",
+  "type": "object"
+}

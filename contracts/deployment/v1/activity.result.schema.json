@@ -1,0 +1,313 @@
+{
+  "$defs": {
+    "Assertions": {
+      "additionalProperties": false,
+      "properties": {
+        "account_create": {
+          "default": "unknown",
+          "enum": [
+            "passed",
+            "failed",
+            "unknown"
+          ],
+          "title": "Account Create",
+          "type": "string"
+        },
+        "authenticated_identity": {
+          "default": "unknown",
+          "enum": [
+            "passed",
+            "failed",
+            "unknown"
+          ],
+          "title": "Authenticated Identity",
+          "type": "string"
+        },
+        "invalid_credentials_rejected": {
+          "default": "unknown",
+          "enum": [
+            "passed",
+            "failed",
+            "unknown"
+          ],
+          "title": "Invalid Credentials Rejected",
+          "type": "string"
+        },
+        "login_success": {
+          "default": "unknown",
+          "enum": [
+            "passed",
+            "failed",
+            "unknown"
+          ],
+          "title": "Login Success",
+          "type": "string"
+        },
+        "unauthenticated_access_rejected": {
+          "default": "unknown",
+          "enum": [
+            "passed",
+            "failed",
+            "unknown"
+          ],
+          "title": "Unauthenticated Access Rejected",
+          "type": "string"
+        }
+      },
+      "title": "Assertions",
+      "type": "object"
+    },
+    "Invocation": {
+      "additionalProperties": false,
+      "properties": {
+        "epoch": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Epoch",
+          "type": "string"
+        },
+        "request_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "request_sha256",
+        "epoch"
+      ],
+      "title": "Invocation",
+      "type": "object"
+    },
+    "PodIncarnation": {
+      "additionalProperties": false,
+      "properties": {
+        "containers": {
+          "items": {
+            "$ref": "#/$defs/RunningContainer"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Containers",
+          "type": "array"
+        },
+        "controller_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Controller Uid",
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Name",
+          "type": "string"
+        },
+        "node_name": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Node Name",
+          "type": "string"
+        },
+        "node_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Node Uid",
+          "type": "string"
+        },
+        "uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Uid",
+          "type": "string"
+        },
+        "workload": {
+          "enum": [
+            "api",
+            "ui",
+            "openfga",
+            "application-postgres",
+            "openfga-postgres"
+          ],
+          "title": "Workload",
+          "type": "string"
+        }
+      },
+      "required": [
+        "workload",
+        "name",
+        "uid",
+        "controller_uid",
+        "node_name",
+        "node_uid",
+        "containers"
+      ],
+      "title": "PodIncarnation",
+      "type": "object"
+    },
+    "RunningContainer": {
+      "additionalProperties": false,
+      "properties": {
+        "container_id": {
+          "pattern": "^(containerd|cri-o)://[a-f0-9]{64}$",
+          "title": "Container Id",
+          "type": "string"
+        },
+        "name": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Name",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "api",
+            "ui",
+            "openfga",
+            "postgres",
+            "busybox"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "runtime_image_digest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Runtime Image Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "name",
+        "runtime_image_digest",
+        "container_id"
+      ],
+      "title": "RunningContainer",
+      "type": "object"
+    },
+    "WorkerProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "reviewer_identity": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Reviewer Identity",
+          "type": "string"
+        },
+        "suite_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Suite Sha256",
+          "type": "string"
+        },
+        "task_queue": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Task Queue",
+          "type": "string"
+        },
+        "temporal_namespace": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Temporal Namespace",
+          "type": "string"
+        },
+        "temporal_server_ca_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Temporal Server Ca Sha256",
+          "type": "string"
+        },
+        "verifier_identity": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Verifier Identity",
+          "type": "string"
+        },
+        "verifier_revision": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Verifier Revision",
+          "type": "string"
+        },
+        "worker_cert_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Worker Cert Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "verifier_identity",
+        "verifier_revision",
+        "reviewer_identity",
+        "suite_sha256",
+        "worker_cert_sha256",
+        "temporal_server_ca_sha256",
+        "temporal_namespace",
+        "task_queue"
+      ],
+      "title": "WorkerProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assertions": {
+      "$ref": "#/$defs/Assertions"
+    },
+    "completed_at": {
+      "format": "date-time",
+      "title": "Completed At",
+      "type": "string"
+    },
+    "invocation": {
+      "$ref": "#/$defs/Invocation"
+    },
+    "operation_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Operation Id",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "passed",
+        "failed",
+        "unknown"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "profile": {
+      "$ref": "#/$defs/WorkerProfile"
+    },
+    "result_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Result Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "birbverify.deployment.account-auth.result.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "workloads": {
+      "items": {
+        "$ref": "#/$defs/PodIncarnation"
+      },
+      "maxItems": 5,
+      "title": "Workloads",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "invocation",
+    "operation_id",
+    "profile",
+    "workloads",
+    "started_at",
+    "completed_at",
+    "outcome",
+    "assertions",
+    "result_sha256"
+  ],
+  "title": "ActivityResult",
+  "type": "object"
+}

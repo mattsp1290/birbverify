@@ -1,0 +1,27 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: {namespace: proof-target, name: write-marker}
+rules:
+- apiGroups: [""]
+  resources: [configmaps]
+  verbs: [get, list, watch, create, patch, update, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: {namespace: proof-target, name: write-marker}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: write-marker}
+subjects: [{kind: User, name: proof-release-client, apiGroup: rbac.authorization.k8s.io}]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: {namespace: proof-storage, name: release-storage}
+rules:
+- apiGroups: [""]
+  resources: [secrets]
+  verbs: [get, list, watch, create, update, delete]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: {namespace: proof-storage, name: release-storage}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: release-storage}
+subjects: [{kind: User, name: proof-release-client, apiGroup: rbac.authorization.k8s.io}]

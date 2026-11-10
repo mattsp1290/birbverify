@@ -1,0 +1,192 @@
+{
+  "$defs": {
+    "OwnedEffect": {
+      "additionalProperties": false,
+      "properties": {
+        "audit_id": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Audit Id"
+        },
+        "event_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Event Sha256"
+        },
+        "object_uid": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Object Uid"
+        },
+        "obligations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Obligations",
+          "type": "array"
+        },
+        "slot": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Slot",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "settled",
+            "quarantined"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "terminal_status_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Terminal Status Sha256"
+        }
+      },
+      "required": [
+        "slot",
+        "state",
+        "object_uid",
+        "audit_id",
+        "event_sha256",
+        "obligations",
+        "terminal_status_sha256"
+      ],
+      "title": "OwnedEffect",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "account_activity_state": {
+      "enum": [
+        "absent",
+        "running",
+        "passed",
+        "failed",
+        "unknown"
+      ],
+      "title": "Account Activity State",
+      "type": "string"
+    },
+    "cluster_uid": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Cluster Uid",
+      "type": "string"
+    },
+    "effects": {
+      "items": {
+        "$ref": "#/$defs/OwnedEffect"
+      },
+      "maxItems": 512,
+      "title": "Effects",
+      "type": "array"
+    },
+    "epoch": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Epoch",
+      "type": "string"
+    },
+    "installation_obligations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Installation Obligations",
+      "type": "array"
+    },
+    "installation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Installation Sha256",
+      "type": "string"
+    },
+    "namespace_uid": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Namespace Uid",
+      "type": "string"
+    },
+    "reason": {
+      "enum": [
+        "completed",
+        "cancelled",
+        "worker_lost"
+      ],
+      "title": "Reason",
+      "type": "string"
+    },
+    "release_authorized": {
+      "const": false,
+      "default": false,
+      "title": "Release Authorized",
+      "type": "boolean"
+    },
+    "request_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "birbverify.deployment.closure.progress.v1",
+      "default": "birbverify.deployment.closure.progress.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "enum": [
+        "sealed",
+        "quarantined"
+      ],
+      "title": "State",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "request_sha256",
+    "epoch",
+    "reason",
+    "installation_sha256",
+    "cluster_uid",
+    "namespace_uid",
+    "state",
+    "effects",
+    "account_activity_state",
+    "installation_obligations"
+  ],
+  "title": "ClosureProgress",
+  "type": "object"
+}

@@ -46,3 +46,8 @@ or authorize Deployment, Flux, Service, or EndpointSlice controllers.
 The [deployment fencing proposal](docs/proposals/deployment-fencing/README.md)
 records the accepted account/auth chart inventory and provisional controller
 contract. Its offline inspector does not authorize deployment or controller writes.
+
+The [deployment producer](docs/deployment-producer.md) adds authenticated audit
+ingestion, per-request CREATE admission, closure progress, and an account/auth
+activity. Its deployment closure retains the owner. Birbforge must keep
+deployment promotion disabled.

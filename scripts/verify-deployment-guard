@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+umask 077
+mkdir -p .proof
+BIRBVERIFY_GUARD_ROOT=$(mktemp -d "$PWD/.proof/bv-guard-XXXXXXXX")
+export BIRBVERIFY_GUARD_ROOT
+cluster=$(basename "$BIRBVERIFY_GUARD_ROOT" | tr '[:upper:]' '[:lower:]')
+cleanup() {
+    kind delete cluster --name "$cluster" --kubeconfig "$BIRBVERIFY_GUARD_ROOT/kubeconfig"
+}
+trap cleanup EXIT
+kind create cluster --name "$cluster" --kubeconfig "$BIRBVERIFY_GUARD_ROOT/kubeconfig" \
+    --image kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f --wait 90s
+uv run pytest -q tests/test_deployment_guard_journey.py
+printf 'Guard receipt: %s/guard-receipt.json\n' "$BIRBVERIFY_GUARD_ROOT"

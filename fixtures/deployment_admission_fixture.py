@@ -17,11 +17,11 @@ IMAGE = os.environ["SETTLEMENT_PAUSE_IMAGE"]
 
 
 def journal():
-    return Journal(ROOT / "journal.sqlite", "a" * 64, WEBHOOK, NAMESPACE)
+    return Journal(ROOT / "journal.sqlite", "a" * 64, WEBHOOK, NAMESPACE, expected_epoch=epoch)
 
 
+epoch = os.environ["SETTLEMENT_EPOCH"]
 ledger = journal()
-epoch = ledger.begin("native-controller-proof", "b" * 64)["epoch"]
 
 
 def write(name, value):
@@ -108,8 +108,6 @@ def control():
                 if action == "restart":
                     ledger = journal()
                     value = ledger.snapshot(epoch)
-                elif action == "ingest":
-                    value = ledger.ingest(command["event"])
                 elif action == "seal":
                     value = ledger.seal(epoch)
                 elif action == "snapshot":

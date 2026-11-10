@@ -1,0 +1,204 @@
+{
+  "$defs": {
+    "ImagePin": {
+      "additionalProperties": false,
+      "properties": {
+        "config_digest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Config Digest",
+          "type": "string"
+        },
+        "platform_manifest": {
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "title": "Platform Manifest",
+          "type": "string"
+        },
+        "reference": {
+          "maxLength": 384,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9./:_-]*@sha256:[0-9a-f]{64}$",
+          "title": "Reference",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reference",
+        "platform_manifest",
+        "config_digest"
+      ],
+      "title": "ImagePin",
+      "type": "object"
+    },
+    "KubernetesBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "cluster_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Cluster Uid",
+          "type": "string"
+        },
+        "namespace": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "namespace_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Namespace Uid",
+          "type": "string"
+        },
+        "target_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_id",
+        "cluster_uid",
+        "namespace",
+        "namespace_uid"
+      ],
+      "title": "KubernetesBinding",
+      "type": "object"
+    },
+    "ReleaseArtifacts": {
+      "additionalProperties": false,
+      "properties": {
+        "application_chart_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Application Chart Sha256",
+          "type": "string"
+        },
+        "data_chart_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Data Chart Sha256",
+          "type": "string"
+        },
+        "openfga_chart_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Openfga Chart Sha256",
+          "type": "string"
+        },
+        "render_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Render Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "data_chart_sha256",
+        "application_chart_sha256",
+        "openfga_chart_sha256",
+        "render_sha256"
+      ],
+      "title": "ReleaseArtifacts",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {
+      "$ref": "#/$defs/ReleaseArtifacts"
+    },
+    "authored_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Authored Revision",
+      "type": "string"
+    },
+    "beans_issue": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Beans Issue",
+      "type": "string"
+    },
+    "candidate_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Candidate Revision",
+      "type": "string"
+    },
+    "deadline": {
+      "format": "date-time",
+      "title": "Deadline",
+      "type": "string"
+    },
+    "images": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ImagePin"
+      },
+      "maxProperties": 5,
+      "minProperties": 5,
+      "propertyNames": {
+        "enum": [
+          "api",
+          "ui",
+          "openfga",
+          "postgres",
+          "busybox"
+        ]
+      },
+      "title": "Images",
+      "type": "object"
+    },
+    "installation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Installation Sha256",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "policy_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Policy Revision",
+      "type": "string"
+    },
+    "producer_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Producer Revision",
+      "type": "string"
+    },
+    "repository": {
+      "const": "birbparty/birbparty",
+      "title": "Repository",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "birbverify.deployment.account-auth.request.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "target": {
+      "$ref": "#/$defs/KubernetesBinding"
+    },
+    "workflow_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Workflow Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "workflow_id",
+    "repository",
+    "candidate_revision",
+    "authored_revision",
+    "beans_issue",
+    "producer_revision",
+    "policy_revision",
+    "plan_sha256",
+    "installation_sha256",
+    "target",
+    "artifacts",
+    "images",
+    "deadline"
+  ],
+  "title": "ActivityRequest",
+  "type": "object"
+}

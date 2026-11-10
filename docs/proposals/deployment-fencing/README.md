@@ -145,9 +145,11 @@ creates a uniquely named disposable kind cluster with an explicit kubeconfig,
 and removes only its own cluster and webhook container. It does not use the
 current shared kubeconfig context. Evidence remains under `.proof/bsmn/`.
 
-The receipt records source hashes, Git revision and dirty status, fixture image
-identity, parent and child UIDs, and the attributable audit ID. The local mailbox
-and audit file are trusted proof inputs, not a production ingestion service.
+The current fixture delivers an `EventList` directly from the API server to the
+[authenticated audit receiver](../../deployment-audit.md). The receipt records
+source hashes, Git revision and dirty status, fixture image identity, the client
+certificate pin, cluster UID, parent and child UIDs, and the attributable audit ID.
+Only the older receipt below used a local audit file as input.
 Deployment and ReplicaSet setup is outside the fenced Pod CREATE experiment.
 The mutator classifier requires complete discovery and complete execution and
 cleanup write inventories from its caller. Snapshot comparison alone cannot

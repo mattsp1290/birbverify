@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "CreateSlot": {
+      "additionalProperties": false,
+      "properties": {
+        "generate_name": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9][a-z0-9.-]{0,57}-$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Generate Name"
+        },
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "object_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Object Sha256",
+          "type": "string"
+        },
+        "parent_slot": {
+          "anyOf": [
+            {
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parent Slot"
+        },
+        "principal_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Principal Sha256",
+          "type": "string"
+        },
+        "slot": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Slot",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slot",
+        "kind",
+        "principal_sha256",
+        "object_sha256"
+      ],
+      "title": "CreateSlot",
+      "type": "object"
+    },
+    "TerminalObserverPin": {
+      "additionalProperties": false,
+      "properties": {
+        "context": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Context",
+          "type": "string"
+        },
+        "kubeconfig_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Kubeconfig Sha256",
+          "type": "string"
+        },
+        "node_name": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Node Name",
+          "type": "string"
+        },
+        "node_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Node Uid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_name",
+        "node_uid",
+        "context",
+        "kubeconfig_sha256"
+      ],
+      "title": "TerminalObserverPin",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "admission_client_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Admission Client Sha256",
+      "type": "string"
+    },
+    "audit_client_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Audit Client Sha256",
+      "type": "string"
+    },
+    "closure_client_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Closure Client Sha256",
+      "type": "string"
+    },
+    "cluster_uid": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Cluster Uid",
+      "type": "string"
+    },
+    "namespace": {
+      "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+      "title": "Namespace",
+      "type": "string"
+    },
+    "namespace_uid": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Namespace Uid",
+      "type": "string"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/CreateSlot"
+      },
+      "maxItems": 512,
+      "minItems": 1,
+      "title": "Rules",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "birbverify.deployment.ownership.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "terminal_observer": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TerminalObserverPin"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "webhook_name": {
+      "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+      "title": "Webhook Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "cluster_uid",
+    "namespace",
+    "namespace_uid",
+    "webhook_name",
+    "admission_client_sha256",
+    "closure_client_sha256",
+    "audit_client_sha256",
+    "rules"
+  ],
+  "title": "OwnershipPolicy",
+  "type": "object"
+}
