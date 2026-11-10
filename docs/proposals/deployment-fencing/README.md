@@ -119,3 +119,8 @@ source PVC mismatch.
 Runtime implementation, disposable controller proof, clean-source runtime receipts,
 and shared-cluster activation remain open. The inventory and contract are a
 preparatory unit, not completion of `birbverify-bsmn`.
+
+The [clean-source inventory proof](inventory-proof.json) binds the reproducible
+receipt and 45 passing targeted tests to producer commit
+`eae60a84251c57cafafb9cc18f289d46acdab6bb`. It is an offline inspector proof,
+not a controller lifecycle or shared-staging acceptance receipt.
