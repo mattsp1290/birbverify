@@ -62,7 +62,7 @@ nodes:
 CONFIG
 cleanup() {
     docker rm -f "$cluster-webhook" "$cluster-audit" >/dev/null 2>&1 || true
-    kind delete cluster --name "$cluster"
+    kind delete cluster --name "$cluster" --kubeconfig "$root/kubeconfig"
 }
 trap cleanup EXIT INT TERM
 kind create cluster --name "$cluster" --kubeconfig "$root/kubeconfig" \

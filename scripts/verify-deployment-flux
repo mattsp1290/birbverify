@@ -527,7 +527,17 @@ def main():
         REPO,
     )
     with ExitStack() as stack:
-        stack.callback(run, "kind", "delete", "cluster", "--name", cluster, check=False)
+        stack.callback(
+            run,
+            "kind",
+            "delete",
+            "cluster",
+            "--name",
+            cluster,
+            "--kubeconfig",
+            root / "kubeconfig",
+            check=False,
+        )
         setup_cluster(root, cluster)
         exercise(root, cluster, stack, (root / "image-id").read_text().strip())
     print(root / "receipt.json")
