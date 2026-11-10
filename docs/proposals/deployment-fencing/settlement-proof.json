@@ -1,0 +1,53 @@
+{
+  "scope": "native ReplicaSet controller Pod CREATE settlement only",
+  "cluster": "birbverify-bsmn-1794332134-29075",
+  "epoch": "b713d596-ec92-4eae-8515-c4f8abd3a73f",
+  "admission_uid": "57f39919-69d7-4525-ac0e-77b44765da06",
+  "empty_pod_list_while_sealed_pending": true,
+  "restart_preserved_pending": true,
+  "persisted_after_seal": true,
+  "missing_audit_kept_pending": true,
+  "terminal_audit_id": "546cf8a8-c60f-4fab-b29e-b7e86f09a5ea",
+  "terminal_audit_stage": "ResponseComplete",
+  "terminal_audit_level": "RequestResponse",
+  "terminal_audit_annotation": "settlement.birbverify.test/intent-57f39919-69d7-4525-ac0e-77b44765da06",
+  "persisted_pod_uid": "2743854a-21ae-4a5c-a03e-0f2b3df0988c",
+  "settled": {
+    "audit_id": "546cf8a8-c60f-4fab-b29e-b7e86f09a5ea",
+    "object_uid": "2743854a-21ae-4a5c-a03e-0f2b3df0988c",
+    "resource_version": "477",
+    "termination_proven": false
+  },
+  "matching_control_confirmed_mutator_active": true,
+  "nonmatching_unreachable_mutator_coexisted": true,
+  "mutator_pins_rechecked": true,
+  "mutator_selector_drift_rejected_by_classifier": true,
+  "mutator_drift_admission_enforcement_proven": false,
+  "mutator_configuration_uids": [
+    "c868007c-0666-474e-9562-e43d1fd1822e"
+  ],
+  "postseal_create_denied": true,
+  "outsider_denied": true,
+  "release_proven": false,
+  "termination_proven": false,
+  "fixture_image_id": "sha256:3d40fd9e11e3a48ba18a162ace8bf36c08c7f02ad947941afe8b4fcaec28f97f",
+  "source_sha256": {
+    "src/birbverify/deployment_journal.py": "4724b676f12856d2a833c279f3dfa5b480c93a9af17c918bebb43be2995b410b",
+    "src/birbverify/deployment_mutators.py": "a80e7a5ded8f121bc7779b8bf28ed6e8c125704f20ed4323df5fdf4038d04701",
+    "src/birbverify/contract.py": "925b71c82f27b2c3063ba2c3f786d1ec7b5b18ff98c5dea787b5f709f4e43617",
+    "fixtures/deployment_admission_fixture.py": "8cd50f7f07ba74f3d108d9a0f7401da2d7d39ae04cb401793b36497eeea3fb66",
+    "tests/test_deployment_settlement_journey.py": "1610513a75d02283dc09b595f361be4e5da8969712f08db9230d4cae31e70482",
+    "scripts/verify-deployment-settlement": "95fc38f99d13b4b00ca22a9fd0587c4424fb7c0180f782b524f4017f0f68f462"
+  },
+  "deployment_uid": "4008c242-15d9-430e-a9f1-1237f95c433c",
+  "replicaset_uid": "78734c34-8a66-4672-93be-707443366e21",
+  "pause_image": "registry.k8s.io/pause:3.10@sha256:ee6521f290b2168b6e0935a181d4cff9be1ac3f505666ef0e3c98fae8199917a",
+  "source_revision": "c4956d8053503488972232a5f03963e80a13d0b8",
+  "source_dirty": false,
+  "schema_version": "birbverify.deployment.settlement-proof.v1alpha1",
+  "targeted_tests_passed": 132,
+  "kind_node_image": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+  "shared_cluster_modified": false,
+  "full_suite_passed": false,
+  "full_suite_limit": "Direct macOS invocation lacks the separate Linux fixture setup, worker image, evidence environment and Temporal binary. Short-path retry recorded 172 passed, 37 failed, 6 skipped; this is not a configured full-suite acceptance run."
+}

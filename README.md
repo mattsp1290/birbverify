@@ -42,3 +42,7 @@ process. `scripts/verify-kubernetes` creates and removes its own disposable kind
 cluster. It proves an account/auth HTTP fixture, outsider denial, worker loss,
 cancellation, and unknown-response quarantine. It does not deploy shared staging
 or authorize Deployment, Flux, Service, or EndpointSlice controllers.
+
+The [deployment fencing proposal](docs/proposals/deployment-fencing/README.md)
+records the accepted account/auth chart inventory and provisional controller
+contract. Its offline inspector does not authorize deployment or controller writes.

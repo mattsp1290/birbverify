@@ -1,0 +1,67 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+umask 077
+cluster="birbverify-bsmn-$(date +%s)-$$"
+root="$PWD/.proof/bsmn/$cluster"
+mkdir -p "$root/audit"
+export BIRBVERIFY_SETTLEMENT_ROOT="$root"
+export BIRBVERIFY_SETTLEMENT_CLUSTER="$cluster"
+export BIRBVERIFY_SETTLEMENT_IMAGE="$cluster:fixture"
+docker build -f fixtures/kubernetes-target.Dockerfile -t "$BIRBVERIFY_SETTLEMENT_IMAGE" .
+cat > "$root/audit-policy.yaml" <<'POLICY'
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: RequestResponse
+  verbs: [create]
+  namespaces: [settlement-proof]
+  resources:
+  - group: apps
+    resources: [deployments, replicasets]
+  - group: ""
+    resources: [pods]
+  omitStages: [RequestReceived]
+- level: None
+POLICY
+cat > "$root/kind.yaml" <<CONFIG
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  extraMounts:
+  - hostPath: "$root/audit-policy.yaml"
+    containerPath: /etc/kubernetes/audit-policy.yaml
+    readOnly: true
+  - hostPath: "$root/audit"
+    containerPath: /var/log/kubernetes/audit
+  kubeadmConfigPatches:
+  - |
+    kind: ClusterConfiguration
+    apiServer:
+      extraArgs:
+        audit-policy-file: /etc/kubernetes/audit-policy.yaml
+        audit-log-path: /var/log/kubernetes/audit/events.jsonl
+        audit-log-mode: blocking
+      extraVolumes:
+      - name: audit-policy
+        hostPath: /etc/kubernetes/audit-policy.yaml
+        mountPath: /etc/kubernetes/audit-policy.yaml
+        readOnly: true
+        pathType: File
+      - name: audit-log
+        hostPath: /var/log/kubernetes/audit
+        mountPath: /var/log/kubernetes/audit
+        pathType: DirectoryOrCreate
+CONFIG
+cleanup() {
+    docker rm -f "$cluster-webhook" >/dev/null 2>&1 || true
+    kind delete cluster --name "$cluster"
+}
+trap cleanup EXIT INT TERM
+kind create cluster --name "$cluster" --kubeconfig "$root/kubeconfig" \
+    --config "$root/kind.yaml" \
+    --image kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f \
+    --wait 90s
+uv run pytest -q tests/test_deployment_settlement_journey.py --junitxml="$root/junit.xml"
+printf 'Native controller settlement proof artifacts: %s\n' "$root"

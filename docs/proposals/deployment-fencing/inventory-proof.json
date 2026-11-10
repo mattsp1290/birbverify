@@ -1,0 +1,14 @@
+{
+  "schema_version": "birbverify.deployment.inventory-proof.v1alpha1",
+  "producer_revision": "eae60a84251c57cafafb9cc18f289d46acdab6bb",
+  "producer_clean": true,
+  "candidate_revision": "503d3bc238e2093eb0e098ecbe87b7e11ed16b4f",
+  "receipt_sha256": "26e87a20388ee3ed976489a6be062889627a868907b5dbd89a18b64e1e568560",
+  "receipt_matches_example": true,
+  "verified_source_files": 46,
+  "object_count": 24,
+  "targeted_tests": 45,
+  "runtime_proof": false,
+  "controller_fencing_implemented": false,
+  "shared_cluster_contacted": false
+}

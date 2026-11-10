@@ -1,0 +1,1656 @@
+{
+  "dependency_sha256": "f4a029a7b65b3e00a603a1b3f1be2b07b8ff1d00eab84639734aa775e3db6e59",
+  "deployment_approved": false,
+  "helm_sha256": "b9fa0498b0eef0a2ff912c98fd6bbaba1b9e2c7a6e42063e406f1e4676272db9",
+  "helm_version": "v3.22.1+gd6c1a0e",
+  "inspector_sha256": "731e53fa78c8ad46c58521cc7ae394adced908648146b0442c30ea9089bdc8e4",
+  "kubernetes_render_version": "1.35.0",
+  "namespace": "birbparty-staging",
+  "object_count": 24,
+  "objects": [
+    {
+      "api_version": "batch/v1",
+      "hooks": {},
+      "images": [
+        {
+          "container": "seed",
+          "image": "ghcr.io/birbparty/api:dev",
+          "role": "containers"
+        }
+      ],
+      "kind": "CronJob",
+      "manifest_sha256": "1766f210c5e3a28eb043ae085a1149c91d29e3999302cc57c8458519ce8634b2",
+      "name": "birbparty-birbparty-seed",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "affinity": {
+          "podAffinity": {
+            "requiredDuringSchedulingIgnoredDuringExecution": [
+              {
+                "labelSelector": {
+                  "matchLabels": {
+                    "app.kubernetes.io/component": "api",
+                    "app.kubernetes.io/instance": "birbparty",
+                    "app.kubernetes.io/name": "birbparty"
+                  }
+                },
+                "topologyKey": "kubernetes.io/hostname"
+              }
+            ]
+          }
+        },
+        "automountServiceAccountToken": false,
+        "containers": [
+          {
+            "command": [
+              "/app/seed"
+            ],
+            "env": [
+              {
+                "name": "DATABASE_URL",
+                "value": "host=birbparty-data-birbparty-data-application-postgresql port=5432 sslmode=disable"
+              },
+              {
+                "name": "PGUSER",
+                "value": "birbparty"
+              },
+              {
+                "name": "PGPASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "application-postgres-password",
+                    "name": "birbparty-runtime"
+                  }
+                }
+              },
+              {
+                "name": "PGDATABASE",
+                "value": "birbparty"
+              },
+              {
+                "name": "FGA_API_URL",
+                "value": "http://birbparty-openfga:8080"
+              },
+              {
+                "name": "FGA_API_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "token",
+                    "name": "birbparty-openfga-client"
+                  }
+                }
+              },
+              {
+                "name": "FGA_RUNTIME_CONFIG_FILE",
+                "value": "/var/lib/birbparty-authz/runtime.json"
+              },
+              {
+                "name": "FGA_REQUEST_TIMEOUT",
+                "value": "3s"
+              },
+              {
+                "name": "SEED_ADMIN_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "seed-admin-username",
+                    "name": "birbparty-seed"
+                  }
+                }
+              },
+              {
+                "name": "SEED_ADMIN_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "seed-admin-password",
+                    "name": "birbparty-seed"
+                  }
+                }
+              }
+            ],
+            "image": "ghcr.io/birbparty/api:dev",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "seed",
+            "resources": {
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/birbparty-authz",
+                "name": "authz-runtime",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "restartPolicy": "Never",
+        "securityContext": {
+          "runAsGroup": 65532,
+          "runAsNonRoot": true,
+          "runAsUser": 65532,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "volumes": [
+          {
+            "name": "authz-runtime",
+            "persistentVolumeClaim": {
+              "claimName": "birbparty-authz-runtime"
+            }
+          }
+        ]
+      },
+      "volume_claim_templates": [],
+      "volumes": [
+        {
+          "name": "authz-runtime",
+          "persistentVolumeClaim": {
+            "claimName": "birbparty-authz-runtime"
+          }
+        }
+      ]
+    },
+    {
+      "api_version": "apps/v1",
+      "hooks": {},
+      "images": [
+        {
+          "container": "authz-state-init",
+          "image": "busybox:1.37",
+          "role": "initContainers"
+        },
+        {
+          "container": "authz-bootstrap",
+          "image": "ghcr.io/birbparty/api:dev",
+          "role": "initContainers"
+        },
+        {
+          "container": "api",
+          "image": "ghcr.io/birbparty/api:dev",
+          "role": "containers"
+        }
+      ],
+      "kind": "Deployment",
+      "manifest_sha256": "3c18b224f06a562464c8d4c9865c0fe0bd3eccdbc95fea83a46ca43ec9b40c12",
+      "name": "birbparty-birbparty-api",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "automountServiceAccountToken": false,
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "DATABASE_URL",
+                "value": "host=birbparty-data-birbparty-data-application-postgresql port=5432 sslmode=disable"
+              },
+              {
+                "name": "PGUSER",
+                "value": "birbparty"
+              },
+              {
+                "name": "PGPASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "application-postgres-password",
+                    "name": "birbparty-runtime"
+                  }
+                }
+              },
+              {
+                "name": "PGDATABASE",
+                "value": "birbparty"
+              },
+              {
+                "name": "JWT_AUTH_KEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "jwt-auth-key",
+                    "name": "birbparty-runtime"
+                  }
+                }
+              },
+              {
+                "name": "WEB_ALLOWED_ORIGINS",
+                "value": "https://party.birb.homes"
+              },
+              {
+                "name": "API_PUBLIC_ORIGIN",
+                "value": "https://party-api.birb.homes"
+              },
+              {
+                "name": "DB_MAX_OPEN_CONNS",
+                "value": "25"
+              },
+              {
+                "name": "DB_MAX_IDLE_CONNS",
+                "value": "10"
+              },
+              {
+                "name": "DB_CONN_MAX_LIFETIME",
+                "value": "30m"
+              },
+              {
+                "name": "DB_PING_TIMEOUT",
+                "value": "5s"
+              },
+              {
+                "name": "FGA_API_URL",
+                "value": "http://birbparty-openfga:8080"
+              },
+              {
+                "name": "FGA_API_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "token",
+                    "name": "birbparty-openfga-client"
+                  }
+                }
+              },
+              {
+                "name": "FGA_RUNTIME_CONFIG_FILE",
+                "value": "/var/lib/birbparty-authz/runtime.json"
+              },
+              {
+                "name": "FGA_REQUEST_TIMEOUT",
+                "value": "3s"
+              }
+            ],
+            "image": "ghcr.io/birbparty/api:dev",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/livez",
+                "port": "http"
+              },
+              "periodSeconds": 10,
+              "timeoutSeconds": 3
+            },
+            "name": "api",
+            "ports": [
+              {
+                "containerPort": 3000,
+                "name": "http",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "periodSeconds": 5,
+              "timeoutSeconds": 3
+            },
+            "resources": {
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "startupProbe": {
+              "failureThreshold": 60,
+              "httpGet": {
+                "path": "/healthz",
+                "port": "http"
+              },
+              "periodSeconds": 5,
+              "timeoutSeconds": 3
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/birbparty-authz",
+                "name": "authz-runtime",
+                "readOnly": true
+              }
+            ]
+          }
+        ],
+        "initContainers": [
+          {
+            "command": [
+              "/bin/sh",
+              "-ec",
+              "path=/var/lib/birbparty-authz\ntest \"$(stat -c '%u:%g:%a' \"$path\")\" = 65532:65532:750 && test -w \"$path\" && test -x \"$path\" || {\n  echo 'Authorization mount requires operator-prepared 65532:65532 mode 0750' >&2; exit 1;\n}\nfor file in \"$path/runtime.json\" \"$path/runtime.json.tmp\"; do\n  test ! -L \"$file\" || {\n    echo 'Authorization runtime path must not be a symlink; automatic repair is disabled' >&2; exit 1;\n  }\n  if test -e \"$file\"; then\n    test -f \"$file\" && test \"$(stat -c '%u:%g:%a' \"$file\")\" = 65532:65532:640 &&\n    test -r \"$file\" && test -w \"$file\" || {\n      echo 'Authorization runtime file requires 65532:65532 mode 0640; automatic repair is disabled' >&2; exit 1;\n    }\n  fi\ndone\n"
+            ],
+            "image": "busybox:1.37",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "authz-state-init",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/birbparty-authz",
+                "name": "authz-runtime"
+              }
+            ]
+          },
+          {
+            "command": [
+              "/app/authz-bootstrap"
+            ],
+            "env": [
+              {
+                "name": "FGA_API_URL",
+                "value": "http://birbparty-openfga:8080"
+              },
+              {
+                "name": "FGA_API_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "token",
+                    "name": "birbparty-openfga-client"
+                  }
+                }
+              },
+              {
+                "name": "FGA_RUNTIME_CONFIG_FILE",
+                "value": "/var/lib/birbparty-authz/runtime.json"
+              },
+              {
+                "name": "FGA_REQUEST_TIMEOUT",
+                "value": "3s"
+              },
+              {
+                "name": "FGA_STORE_NAME",
+                "value": "birbparty"
+              }
+            ],
+            "image": "ghcr.io/birbparty/api:dev",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "authz-bootstrap",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/birbparty-authz",
+                "name": "authz-runtime"
+              }
+            ]
+          }
+        ],
+        "securityContext": {
+          "runAsGroup": 65532,
+          "runAsNonRoot": true,
+          "runAsUser": 65532,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "terminationGracePeriodSeconds": 15,
+        "volumes": [
+          {
+            "name": "authz-runtime",
+            "persistentVolumeClaim": {
+              "claimName": "birbparty-authz-runtime"
+            }
+          }
+        ]
+      },
+      "volume_claim_templates": [],
+      "volumes": [
+        {
+          "name": "authz-runtime",
+          "persistentVolumeClaim": {
+            "claimName": "birbparty-authz-runtime"
+          }
+        }
+      ]
+    },
+    {
+      "api_version": "apps/v1",
+      "hooks": {},
+      "images": [
+        {
+          "container": "ui",
+          "image": "ghcr.io/birbparty/ui:dev",
+          "role": "containers"
+        }
+      ],
+      "kind": "Deployment",
+      "manifest_sha256": "8b33fe128562414a64061814bcc3bfda34dc49e1426146c0c9f65e1f8f1c3dc9",
+      "name": "birbparty-birbparty-ui",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "automountServiceAccountToken": false,
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "BIRBPARTY_API_UPSTREAM_HOST",
+                "value": "birbparty-birbparty-api"
+              }
+            ],
+            "image": "ghcr.io/birbparty/ui:dev",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 6,
+              "httpGet": {
+                "path": "/",
+                "port": "http"
+              },
+              "periodSeconds": 10,
+              "timeoutSeconds": 3
+            },
+            "name": "ui",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 6,
+              "httpGet": {
+                "path": "/",
+                "port": "http"
+              },
+              "periodSeconds": 10,
+              "timeoutSeconds": 3
+            },
+            "resources": {
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "startupProbe": {
+              "failureThreshold": 6,
+              "httpGet": {
+                "path": "/",
+                "port": "http"
+              },
+              "periodSeconds": 10,
+              "timeoutSeconds": 3
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/tmp",
+                "name": "apache-tmp"
+              }
+            ]
+          }
+        ],
+        "securityContext": {
+          "runAsGroup": 65532,
+          "runAsNonRoot": true,
+          "runAsUser": 65532,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "volumes": [
+          {
+            "emptyDir": {
+              "sizeLimit": "64Mi"
+            },
+            "name": "apache-tmp"
+          }
+        ]
+      },
+      "volume_claim_templates": [],
+      "volumes": [
+        {
+          "emptyDir": {
+            "sizeLimit": "64Mi"
+          },
+          "name": "apache-tmp"
+        }
+      ]
+    },
+    {
+      "api_version": "apps/v1",
+      "hooks": {},
+      "images": [
+        {
+          "container": "migrate-database",
+          "image": "openfga/openfga:v1.18.3",
+          "role": "initContainers"
+        },
+        {
+          "container": "openfga",
+          "image": "openfga/openfga:v1.18.3",
+          "role": "containers"
+        }
+      ],
+      "kind": "Deployment",
+      "manifest_sha256": "00bbc5fceb382b4da9d5e1d25a7b7df802bd13dc47b3d951424d51c66eb07d2d",
+      "name": "birbparty-openfga",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "containers": [
+          {
+            "args": [
+              "run"
+            ],
+            "env": [
+              {
+                "name": "OPENFGA_DATASTORE_ENGINE",
+                "value": "postgres"
+              },
+              {
+                "name": "OPENFGA_DATASTORE_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "openfga-postgres-password",
+                    "name": "birbparty-runtime"
+                  }
+                }
+              },
+              {
+                "name": "OPENFGA_DATASTORE_METRICS_ENABLED",
+                "value": "false"
+              },
+              {
+                "name": "OPENFGA_GRPC_ADDR",
+                "value": "0.0.0.0:8081"
+              },
+              {
+                "name": "OPENFGA_HTTP_ENABLED",
+                "value": "true"
+              },
+              {
+                "name": "OPENFGA_HTTP_ADDR",
+                "value": "0.0.0.0:8080"
+              },
+              {
+                "name": "OPENFGA_HTTP_CORS_ALLOWED_ORIGINS",
+                "value": "*"
+              },
+              {
+                "name": "OPENFGA_HTTP_CORS_ALLOWED_HEADERS",
+                "value": "*"
+              },
+              {
+                "name": "OPENFGA_AUTHN_METHOD",
+                "value": "preshared"
+              },
+              {
+                "name": "OPENFGA_AUTHN_PRESHARED_KEYS",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "keys",
+                    "name": "birbparty-openfga-auth"
+                  }
+                }
+              },
+              {
+                "name": "OPENFGA_PLAYGROUND_ENABLED",
+                "value": "false"
+              },
+              {
+                "name": "OPENFGA_PLAYGROUND_PORT",
+                "value": "3000"
+              },
+              {
+                "name": "OPENFGA_LOG_FORMAT",
+                "value": "json"
+              },
+              {
+                "name": "OPENFGA_LOG_LEVEL",
+                "value": "info"
+              },
+              {
+                "name": "OPENFGA_LOG_TIMESTAMP_FORMAT",
+                "value": "Unix"
+              },
+              {
+                "name": "OPENFGA_REQUEST_DURATION_DATASTORE_QUERY_COUNT_BUCKETS",
+                "value": "50,200"
+              },
+              {
+                "name": "OPENFGA_METRICS_ENABLED",
+                "value": "true"
+              },
+              {
+                "name": "OPENFGA_METRICS_ADDR",
+                "value": "0.0.0.0:2112"
+              },
+              {
+                "name": "OPENFGA_DATASTORE_URI",
+                "value": "postgres://openfga@birbparty-data-birbparty-data-openfga-postgresql:5432/openfga?sslmode=disable"
+              }
+            ],
+            "image": "openfga/openfga:v1.18.3",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 6,
+              "grpc": {
+                "port": 8081
+              },
+              "initialDelaySeconds": 5,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 3
+            },
+            "name": "openfga",
+            "ports": [
+              {
+                "containerPort": 8081,
+                "name": "grpc"
+              },
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 3001,
+                "name": "profiler",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 3000,
+                "name": "playground",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 2112,
+                "name": "metrics",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 12,
+              "grpc": {
+                "port": 8081
+              },
+              "initialDelaySeconds": 1,
+              "periodSeconds": 5,
+              "successThreshold": 1,
+              "timeoutSeconds": 3
+            },
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "50m",
+                "memory": "128Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "startupProbe": {
+              "failureThreshold": 60,
+              "grpc": {
+                "port": 8081
+              },
+              "initialDelaySeconds": 0,
+              "periodSeconds": 5,
+              "successThreshold": 1,
+              "timeoutSeconds": 3
+            }
+          }
+        ],
+        "initContainers": [
+          {
+            "args": [
+              "migrate"
+            ],
+            "env": [
+              {
+                "name": "OPENFGA_DATASTORE_ENGINE",
+                "value": "postgres"
+              },
+              {
+                "name": "OPENFGA_DATASTORE_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "openfga-postgres-password",
+                    "name": "birbparty-runtime"
+                  }
+                }
+              },
+              {
+                "name": "OPENFGA_DATASTORE_URI",
+                "value": "postgres://openfga@birbparty-data-birbparty-data-openfga-postgresql:5432/openfga?sslmode=disable"
+              }
+            ],
+            "image": "openfga/openfga:v1.18.3",
+            "name": "migrate-database",
+            "resources": {
+              "limits": {
+                "cpu": "250m",
+                "memory": "256Mi"
+              },
+              "requests": {
+                "cpu": "25m",
+                "memory": "64Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            }
+          }
+        ],
+        "securityContext": {
+          "fsGroup": 65532,
+          "fsGroupChangePolicy": "OnRootMismatch",
+          "runAsGroup": 65532,
+          "runAsNonRoot": true,
+          "runAsUser": 65532,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "serviceAccountName": "birbparty-birbparty-openfga"
+      },
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "networking.k8s.io/v1",
+      "hooks": {},
+      "images": [],
+      "kind": "NetworkPolicy",
+      "manifest_sha256": "2774bbe33407f31844c8d73cce72c6455c3c1ceaba1cbbb92e28c72c464ebfe4",
+      "name": "birbparty-birbparty-api-ingress",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "networking.k8s.io/v1",
+      "hooks": {},
+      "images": [],
+      "kind": "NetworkPolicy",
+      "manifest_sha256": "11195fd60810aca391b4fe6399271ab5b5112403b6e79419dfd6c152856224c0",
+      "name": "birbparty-birbparty-default-deny-ingress",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "networking.k8s.io/v1",
+      "hooks": {},
+      "images": [],
+      "kind": "NetworkPolicy",
+      "manifest_sha256": "4157e4269d4803dac8a876537befe2846ee5b48a84ef5c8a84e6bcaf82135f92",
+      "name": "birbparty-birbparty-openfga-ingress",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "networking.k8s.io/v1",
+      "hooks": {},
+      "images": [],
+      "kind": "NetworkPolicy",
+      "manifest_sha256": "e6ceddf1d5e413636dc8df4a96ee9a6e68526da8b3ad44ed10eac46fa9b53e69",
+      "name": "birbparty-birbparty-ui-ingress",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "networking.k8s.io/v1",
+      "hooks": {},
+      "images": [],
+      "kind": "NetworkPolicy",
+      "manifest_sha256": "ffb22f5b89a3fb6800801b849b1b081f1b4754cccd26747b9b5c5153e14b11e0",
+      "name": "birbparty-data-birbparty-data-application-postgresql",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "networking.k8s.io/v1",
+      "hooks": {},
+      "images": [],
+      "kind": "NetworkPolicy",
+      "manifest_sha256": "20a78bdf21b1f11e6cdaa2b116bc0111d15d658048cdfc924cbf43a3b4592f85",
+      "name": "birbparty-data-birbparty-data-default-deny-ingress",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "networking.k8s.io/v1",
+      "hooks": {},
+      "images": [],
+      "kind": "NetworkPolicy",
+      "manifest_sha256": "747d755c04227b8b5d4881dc1ba0a2355f48ead03302d11a0ca63d3ca09a028e",
+      "name": "birbparty-data-birbparty-data-openfga-postgresql",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "PersistentVolumeClaim",
+      "manifest_sha256": "b05021b5b7f7431b1c0ab59d4fd354917f21c838b61c24563763e8573ff0ac1c",
+      "name": "birbparty-authz-runtime",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {
+        "helm.sh/hook": "test",
+        "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+      },
+      "images": [
+        {
+          "container": "connectivity",
+          "image": "ghcr.io/birbparty/api:dev",
+          "role": "containers"
+        }
+      ],
+      "kind": "Pod",
+      "manifest_sha256": "e39a9802e5c725074c94de5da77f90af9b22afb4cd141c3cd5a51e6ce8eaaccd",
+      "name": "birbparty-birbparty-test",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "activeDeadlineSeconds": 120,
+        "automountServiceAccountToken": false,
+        "containers": [
+          {
+            "command": [
+              "/bin/busybox",
+              "sh",
+              "-ec",
+              "fetch_200() {\n  fetch_url=$1\n  fetch_output=$2\n  fetch_headers=$(/bin/busybox wget -S -O \"$fetch_output\" \"$fetch_url\" 2>&1) || {\n    printf 'request failed: %s\\n%s\\n' \"$fetch_url\" \"$fetch_headers\" >&2\n    return 1\n  }\n  fetch_status=$(printf '%s\\n' \"$fetch_headers\" | /bin/busybox awk '/HTTP\\// { print $2; exit }')\n  if [ \"$fetch_status\" != 200 ]; then\n    printf 'expected HTTP 200 from %s, got %s\\n' \"$fetch_url\" \"${fetch_status:-no-status}\" >&2\n    return 1\n  fi\n}\nfetch_200 http://birbparty-birbparty-ui:8080/ /tmp/ui-root\n/bin/busybox grep -Eiq '<!doctype html|<html' /tmp/ui-root\nfetch_200 http://birbparty-birbparty-ui:8080/birbs/test-route /tmp/ui-deep\n/bin/busybox grep -Eiq '<!doctype html|<html' /tmp/ui-deep\nfetch_200 http://birbparty-birbparty-ui:8080/api/healthz /tmp/ui-api-healthz\n/bin/busybox grep -Eq '^\\{\"status\":\"ok\"\\}$' /tmp/ui-api-healthz\nfetch_200 http://birbparty-birbparty-api:3000/livez /tmp/api-livez\nfetch_200 http://birbparty-birbparty-api:3000/healthz /tmp/api-healthz\n"
+            ],
+            "image": "ghcr.io/birbparty/api:dev",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "connectivity",
+            "resources": {
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/tmp",
+                "name": "test-tmp"
+              }
+            ]
+          }
+        ],
+        "restartPolicy": "Never",
+        "securityContext": {
+          "runAsGroup": 65532,
+          "runAsNonRoot": true,
+          "runAsUser": 65532,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "volumes": [
+          {
+            "emptyDir": {
+              "sizeLimit": "8Mi"
+            },
+            "name": "test-tmp"
+          }
+        ]
+      },
+      "volume_claim_templates": [],
+      "volumes": [
+        {
+          "emptyDir": {
+            "sizeLimit": "8Mi"
+          },
+          "name": "test-tmp"
+        }
+      ]
+    },
+    {
+      "api_version": "v1",
+      "hooks": {
+        "helm.sh/hook": "test"
+      },
+      "images": [
+        {
+          "container": "grpc-health-probe",
+          "image": "openfga/openfga:v1.18.3",
+          "role": "containers"
+        }
+      ],
+      "kind": "Pod",
+      "manifest_sha256": "71cf6fdceecb4f7594284dd2dae3026aacd46c5184f9e8a0629c061d717137ef",
+      "name": "birbparty-openfga-test-connection",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "activeDeadlineSeconds": 120,
+        "automountServiceAccountToken": false,
+        "containers": [
+          {
+            "args": [
+              "-connect-timeout=3s",
+              "-rpc-timeout=3s"
+            ],
+            "command": [
+              "grpc_health_probe",
+              "-addr=birbparty-openfga:8081"
+            ],
+            "image": "openfga/openfga:v1.18.3",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "grpc-health-probe",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 65532,
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            }
+          }
+        ],
+        "restartPolicy": "Never",
+        "securityContext": {
+          "runAsGroup": 65532,
+          "runAsNonRoot": true,
+          "runAsUser": 65532,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "serviceAccountName": "default"
+      },
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "Service",
+      "manifest_sha256": "b4f3128a0b0003eb123075f88d80b61593d81f1ca3efa183f0b2b64d07443ab3",
+      "name": "birbparty-birbparty-api",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "Service",
+      "manifest_sha256": "2e4d643b5fb4c0cce1df90383bdf4b5a00be00b6804c740bf621b81112e3024e",
+      "name": "birbparty-birbparty-ui",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "Service",
+      "manifest_sha256": "e4aeff1b0bc107c42af00d4698a0f906585c81ad6073383c6b19a3e8d02cc439",
+      "name": "birbparty-data-birbparty-data-application-postgresql",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "Service",
+      "manifest_sha256": "91aee3cc13775ad3402d9f585aa3c3ffd8cc6c1f07ccc900406a82e6b8ddff3b",
+      "name": "birbparty-data-birbparty-data-application-postgresql-headless",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "Service",
+      "manifest_sha256": "d1cdec606818998de41a280c8fc5e3f5959652640f51ada6447a04f695b8b8db",
+      "name": "birbparty-data-birbparty-data-openfga-postgresql",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "Service",
+      "manifest_sha256": "f5f47c6b9517817d7409ea51a350cc94993be8b8479c2ecc33f556a110acc266",
+      "name": "birbparty-data-birbparty-data-openfga-postgresql-headless",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "Service",
+      "manifest_sha256": "b6779c7f3d47e3a1c495f78ad66335b2bd98dffb28acd47c8e2a9e6dc5e5a7b7",
+      "name": "birbparty-openfga",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "v1",
+      "hooks": {},
+      "images": [],
+      "kind": "ServiceAccount",
+      "manifest_sha256": "a4b8f91e1cd885954d9442a51eb27716d6c69386cd3f50c9eed52011d56e487a",
+      "name": "birbparty-birbparty-openfga",
+      "namespace": "birbparty-staging",
+      "pod_spec": null,
+      "volume_claim_templates": [],
+      "volumes": []
+    },
+    {
+      "api_version": "apps/v1",
+      "hooks": {},
+      "images": [
+        {
+          "container": "volume-permissions",
+          "image": "busybox:1.37",
+          "role": "initContainers"
+        },
+        {
+          "container": "postgresql",
+          "image": "postgres:17-alpine",
+          "role": "containers"
+        }
+      ],
+      "kind": "StatefulSet",
+      "manifest_sha256": "ed0e007fbe330408d534abbf0e4510e1a894e40c13590ea0d1fe06f1099febfe",
+      "name": "birbparty-data-birbparty-data-application-postgresql",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "automountServiceAccountToken": false,
+        "containers": [
+          {
+            "args": [
+              "-p",
+              "5432"
+            ],
+            "env": [
+              {
+                "name": "POSTGRES_DB",
+                "value": "birbparty"
+              },
+              {
+                "name": "POSTGRES_USER",
+                "value": "birbparty"
+              },
+              {
+                "name": "POSTGRES_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "application-postgres-password",
+                    "name": "birbparty-runtime"
+                  }
+                }
+              },
+              {
+                "name": "PGDATA",
+                "value": "/var/lib/postgresql/data/pgdata"
+              }
+            ],
+            "image": "postgres:17-alpine",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "sh",
+                  "-ec",
+                  "test -s \"$PGDATA/postmaster.pid\" && kill -0 \"$(head -n 1 \"$PGDATA/postmaster.pid\")\""
+                ]
+              },
+              "failureThreshold": 6,
+              "periodSeconds": 10,
+              "timeoutSeconds": 3
+            },
+            "name": "postgresql",
+            "ports": [
+              {
+                "containerPort": 5432,
+                "name": "postgresql"
+              }
+            ],
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "sh",
+                  "-ec",
+                  "pg_isready -h 127.0.0.1 -p 5432 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" && PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -w -h 127.0.0.1 -p 5432 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -Atqc 'SELECT 1'"
+                ]
+              },
+              "failureThreshold": 6,
+              "periodSeconds": 5,
+              "timeoutSeconds": 3
+            },
+            "resources": {
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 70,
+              "runAsNonRoot": true,
+              "runAsUser": 70,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "startupProbe": {
+              "exec": {
+                "command": [
+                  "sh",
+                  "-ec",
+                  "test -s \"$PGDATA/postmaster.pid\" && kill -0 \"$(head -n 1 \"$PGDATA/postmaster.pid\")\""
+                ]
+              },
+              "failureThreshold": 30,
+              "periodSeconds": 5,
+              "timeoutSeconds": 3
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/postgresql/data",
+                "name": "data"
+              },
+              {
+                "mountPath": "/var/run/postgresql",
+                "name": "postgresql-runtime"
+              }
+            ]
+          }
+        ],
+        "initContainers": [
+          {
+            "command": [
+              "sh",
+              "-ec",
+              "test \"$(stat -c '%u:%g:%a' /var/lib/postgresql/data)\" = 70:70:750 &&\ntest -w /var/lib/postgresql/data && test -x /var/lib/postgresql/data || {\n  echo 'PostgreSQL mount requires operator-prepared 70:70 mode 0750' >&2; exit 1;\n}\npath=/var/lib/postgresql/data/pgdata\ntest ! -L \"$path\" || {\n  echo 'PGDATA must not be a symlink; automatic repair is disabled' >&2; exit 1;\n}\nif test -e \"$path\"; then\n  test -d \"$path\" && test \"$(stat -c '%u:%g:%a' \"$path\")\" = 70:70:700 &&\n  test -w \"$path\" && test -x \"$path\" || {\n    echo 'Existing PGDATA requires 70:70 mode 0700; automatic repair is disabled' >&2; exit 1;\n  }\nfi\n"
+            ],
+            "image": "busybox:1.37",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "volume-permissions",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 70,
+              "runAsNonRoot": true,
+              "runAsUser": 70,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/postgresql/data",
+                "name": "data"
+              }
+            ]
+          }
+        ],
+        "securityContext": {
+          "runAsGroup": 70,
+          "runAsNonRoot": true,
+          "runAsUser": 70,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "terminationGracePeriodSeconds": 60,
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "postgresql-runtime"
+          }
+        ]
+      },
+      "volume_claim_templates": [
+        {
+          "metadata": {
+            "annotations": {
+              "helm.sh/resource-policy": "keep"
+            },
+            "labels": {
+              "app.kubernetes.io/component": "application-postgresql",
+              "app.kubernetes.io/instance": "birbparty-data",
+              "app.kubernetes.io/managed-by": "Helm",
+              "app.kubernetes.io/name": "birbparty-data",
+              "app.kubernetes.io/version": "17-alpine",
+              "helm.sh/chart": "birbparty-data-0.1.0"
+            },
+            "name": "data"
+          },
+          "spec": {
+            "accessModes": [
+              "ReadWriteOnce"
+            ],
+            "resources": {
+              "requests": {
+                "storage": "8Gi"
+              }
+            }
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "emptyDir": {},
+          "name": "postgresql-runtime"
+        }
+      ]
+    },
+    {
+      "api_version": "apps/v1",
+      "hooks": {},
+      "images": [
+        {
+          "container": "volume-permissions",
+          "image": "busybox:1.37",
+          "role": "initContainers"
+        },
+        {
+          "container": "postgresql",
+          "image": "postgres:17-alpine",
+          "role": "containers"
+        }
+      ],
+      "kind": "StatefulSet",
+      "manifest_sha256": "5fe91b42fabc88710b6dfe1966f7875cd1e281971745001229ecdef0f8aafc49",
+      "name": "birbparty-data-birbparty-data-openfga-postgresql",
+      "namespace": "birbparty-staging",
+      "pod_spec": {
+        "automountServiceAccountToken": false,
+        "containers": [
+          {
+            "args": [
+              "-p",
+              "5432"
+            ],
+            "env": [
+              {
+                "name": "POSTGRES_DB",
+                "value": "openfga"
+              },
+              {
+                "name": "POSTGRES_USER",
+                "value": "openfga"
+              },
+              {
+                "name": "POSTGRES_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "openfga-postgres-password",
+                    "name": "birbparty-runtime"
+                  }
+                }
+              },
+              {
+                "name": "PGDATA",
+                "value": "/var/lib/postgresql/data/pgdata"
+              }
+            ],
+            "image": "postgres:17-alpine",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "exec": {
+                "command": [
+                  "sh",
+                  "-ec",
+                  "test -s \"$PGDATA/postmaster.pid\" && kill -0 \"$(head -n 1 \"$PGDATA/postmaster.pid\")\""
+                ]
+              },
+              "failureThreshold": 6,
+              "periodSeconds": 10,
+              "timeoutSeconds": 3
+            },
+            "name": "postgresql",
+            "ports": [
+              {
+                "containerPort": 5432,
+                "name": "postgresql"
+              }
+            ],
+            "readinessProbe": {
+              "exec": {
+                "command": [
+                  "sh",
+                  "-ec",
+                  "pg_isready -h 127.0.0.1 -p 5432 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" && PGPASSWORD=\"$POSTGRES_PASSWORD\" psql -w -h 127.0.0.1 -p 5432 -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -Atqc 'SELECT 1'"
+                ]
+              },
+              "failureThreshold": 6,
+              "periodSeconds": 5,
+              "timeoutSeconds": 3
+            },
+            "resources": {
+              "limits": {
+                "cpu": "1000m",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "250m",
+                "memory": "512Mi"
+              }
+            },
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 70,
+              "runAsNonRoot": true,
+              "runAsUser": 70,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "startupProbe": {
+              "exec": {
+                "command": [
+                  "sh",
+                  "-ec",
+                  "test -s \"$PGDATA/postmaster.pid\" && kill -0 \"$(head -n 1 \"$PGDATA/postmaster.pid\")\""
+                ]
+              },
+              "failureThreshold": 30,
+              "periodSeconds": 5,
+              "timeoutSeconds": 3
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/postgresql/data",
+                "name": "data"
+              },
+              {
+                "mountPath": "/var/run/postgresql",
+                "name": "postgresql-runtime"
+              }
+            ]
+          }
+        ],
+        "initContainers": [
+          {
+            "command": [
+              "sh",
+              "-ec",
+              "test \"$(stat -c '%u:%g:%a' /var/lib/postgresql/data)\" = 70:70:750 &&\ntest -w /var/lib/postgresql/data && test -x /var/lib/postgresql/data || {\n  echo 'PostgreSQL mount requires operator-prepared 70:70 mode 0750' >&2; exit 1;\n}\npath=/var/lib/postgresql/data/pgdata\ntest ! -L \"$path\" || {\n  echo 'PGDATA must not be a symlink; automatic repair is disabled' >&2; exit 1;\n}\nif test -e \"$path\"; then\n  test -d \"$path\" && test \"$(stat -c '%u:%g:%a' \"$path\")\" = 70:70:700 &&\n  test -w \"$path\" && test -x \"$path\" || {\n    echo 'Existing PGDATA requires 70:70 mode 0700; automatic repair is disabled' >&2; exit 1;\n  }\nfi\n"
+            ],
+            "image": "busybox:1.37",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "volume-permissions",
+            "securityContext": {
+              "allowPrivilegeEscalation": false,
+              "capabilities": {
+                "drop": [
+                  "ALL"
+                ]
+              },
+              "readOnlyRootFilesystem": true,
+              "runAsGroup": 70,
+              "runAsNonRoot": true,
+              "runAsUser": 70,
+              "seccompProfile": {
+                "type": "RuntimeDefault"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/postgresql/data",
+                "name": "data"
+              }
+            ]
+          }
+        ],
+        "securityContext": {
+          "runAsGroup": 70,
+          "runAsNonRoot": true,
+          "runAsUser": 70,
+          "seccompProfile": {
+            "type": "RuntimeDefault"
+          }
+        },
+        "terminationGracePeriodSeconds": 60,
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "postgresql-runtime"
+          }
+        ]
+      },
+      "volume_claim_templates": [
+        {
+          "metadata": {
+            "annotations": {
+              "helm.sh/resource-policy": "keep"
+            },
+            "labels": {
+              "app.kubernetes.io/component": "openfga-postgresql",
+              "app.kubernetes.io/instance": "birbparty-data",
+              "app.kubernetes.io/managed-by": "Helm",
+              "app.kubernetes.io/name": "birbparty-data",
+              "app.kubernetes.io/version": "17-alpine",
+              "helm.sh/chart": "birbparty-data-0.1.0"
+            },
+            "name": "data"
+          },
+          "spec": {
+            "accessModes": [
+              "ReadWriteOnce"
+            ],
+            "resources": {
+              "requests": {
+                "storage": "8Gi"
+              }
+            }
+          }
+        }
+      ],
+      "volumes": [
+        {
+          "emptyDir": {},
+          "name": "postgresql-runtime"
+        }
+      ]
+    }
+  ],
+  "offline_only": true,
+  "pvc_references_absent_from_render": [],
+  "pyyaml_version": "6.0.3",
+  "render_sha256": {
+    "birbparty": "4d1ec8da2e04bf597a07e4adddff873a7e2bd66a1da61b519cd7e582fb4dc21b",
+    "birbparty-data": "41e9aed38ddc30a1c765d01406dcde4952fa1261539a783160c7991b48e0826e"
+  },
+  "runtime_proof": false,
+  "schema_version": "birbverify.deployment.inventory.v1alpha1",
+  "source_lock_sha256": "e1dfd3c6230c75d97e2986f72a35b017a6d23104d5abe08b7ed7a848c223200e",
+  "source_revision": "503d3bc238e2093eb0e098ecbe87b7e11ed16b4f",
+  "unproven_effect_requirements": [
+    "All writers and admission-time mutations require runtime fencing proof.",
+    "Controllers, generated Pods and Helm test hooks require closure proof.",
+    "PVCs, dynamic PV provisioning and retained database writes require storage proof.",
+    "Referenced Secrets, service accounts and namespace-local PVCs require resolution.",
+    "Mutable image tags require resolved digests before execution approval.",
+    "Service, network-policy and external database effects require runtime proof."
+  ],
+  "verified_source_files": 46
+}
