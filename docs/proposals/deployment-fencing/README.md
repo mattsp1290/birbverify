@@ -152,3 +152,11 @@ Deployment and ReplicaSet setup is outside the fenced Pod CREATE experiment.
 The mutator classifier requires complete discovery and complete execution and
 cleanup write inventories from its caller. Snapshot comparison alone cannot
 prevent a later admission-configuration race.
+
+The [clean-source settlement receipt](settlement-proof.json) records a passing
+live run from commit `c4956d8` and hashes the exact proof inputs. A matching
+control request first failed at the unreachable mutator, proving the webhook was
+active before the excluded namespace succeeded. The targeted suite passed 132
+tests. The broader suite was not validated with its required Linux fixture setup;
+direct macOS attempts encountered long socket paths and missing worker/evidence
+configuration and Temporal binary. No full-suite pass is claimed.

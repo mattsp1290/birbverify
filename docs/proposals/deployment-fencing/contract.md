@@ -125,8 +125,10 @@ uses its approved init container; migration Job mode remains prohibited.
 
 The existing target package contains Python 3.13 and kubectl with a persistent
 SQLite ledger and a private local socket. It implements bare-Pod v1 only. It does
-not package a deployment proxy, admission journal, controller completion observer,
-or controller-aware closure service.
+not expose a production deployment admission server, authenticated controller
+completion observer, or controller-aware closure service. The separate journal
+and mutator-classification library and disposable fixture establish API settlement
+only. They do not enable this provisional contract.
 
 A deployment package must include its acceptance/seal authority and settlement
 transport, durable storage, credential isolation, pinned controller clients and
