@@ -1,0 +1,537 @@
+#!/usr/bin/env -S uv run python
+"""Exercise an installed ownership and audit receiver with a real Flux HelmRelease."""
+
+import argparse
+import base64
+import hashlib
+import json
+import os
+import shutil
+import ssl
+import subprocess
+import sys
+import tempfile
+import time
+from contextlib import ExitStack
+from functools import partial
+from pathlib import Path
+
+import yaml
+
+from birbverify.contract import digest
+from birbverify.deployment_bootstrap import provision
+from birbverify.deployment_guard import inventory, manifests, verify_initial_installation
+from birbverify.deployment_ownership import object_shape_sha256
+from birbverify.kubernetes_api import KubernetesAPI
+
+REPO = Path(__file__).resolve().parents[1]
+FIXTURE = REPO / "fixtures/deployment-flux"
+sys.path.insert(0, str(REPO / "fixtures"))
+from deployment_audit_pki import create as create_pki  # noqa: E402
+
+NODE = (
+    "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f"
+)
+FLUX = {
+    "ghcr.io/fluxcd/source-controller:v1.6.2": (
+        "11c8e14df885eff86586533d9941293ec8a1e9fff71bacf119edc79fdf3c63e3"
+    ),
+    "ghcr.io/fluxcd/helm-controller:v1.3.0": (
+        "db55d9d9f9b5106acd8c21da6916b8e285fcfc5572f214361ececd1a8571a4f0"
+    ),
+}
+WEBHOOK = "ownership.birbverify.test"
+
+
+def run(*args, data=None, check=True):
+    return subprocess.run(
+        [str(arg) for arg in args],
+        input=data,
+        text=True,
+        stdout=subprocess.PIPE,
+        check=check,
+        timeout=360,
+    ).stdout.strip()
+
+
+def encoded(path):
+    return base64.b64encode(path.read_bytes()).decode()
+
+
+def pin(cert):
+    return hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest()
+
+
+def client(pki, name):
+    return {
+        "client-certificate-data": encoded(pki / (name + ".crt")),
+        "client-key-data": encoded(pki / (name + ".key")),
+    }
+
+
+def config(url, ca_data, user):
+    return {
+        "apiVersion": "v1",
+        "kind": "Config",
+        "current-context": "proof",
+        "clusters": [
+            {"name": "proof", "cluster": {"server": url, "certificate-authority-data": ca_data}}
+        ],
+        "users": [{"name": "client", "user": user}],
+        "contexts": [{"name": "proof", "context": {"cluster": "proof", "user": "client"}}],
+    }
+
+
+def write(path, obj):
+    path.write_text(json.dumps(obj, indent=2) + "\n")
+
+
+def setup_cluster(root, cluster):
+    bootstrap = root / "bootstrap"
+    bootstrap.mkdir()
+    audit, admission = root / "audit", root / "admission"
+    for pki in (audit, admission):
+        create_pki(pki, cluster + "-" + pki.name)
+    write(
+        bootstrap / "audit.kubeconfig",
+        config(
+            "https://" + cluster + "-audit:9443/v1/audit",
+            encoded(audit / "ca.crt"),
+            client(audit, "apiserver"),
+        ),
+    )
+    write(
+        bootstrap / "admission.kubeconfig",
+        {
+            "apiVersion": "v1",
+            "kind": "Config",
+            "users": [
+                {"name": cluster + "-admission:8443", "user": client(admission, "apiserver")}
+            ],
+        },
+    )
+    shutil.copyfile(FIXTURE / "admission.yaml", bootstrap / "admission.yaml")
+    shutil.copyfile(FIXTURE / "audit-policy.yaml", bootstrap / "audit-policy.yaml")
+    (root / "kind.yaml").write_text(
+        (FIXTURE / "kind.yaml").read_text().replace("PROOF_CONFIG", str(bootstrap))
+    )
+    run(
+        "kind",
+        "create",
+        "cluster",
+        "--name",
+        cluster,
+        "--image",
+        NODE,
+        "--wait",
+        "120s",
+        "--config",
+        root / "kind.yaml",
+        "--kubeconfig",
+        root / "kubeconfig",
+    )
+
+
+def release_identity(root, kubectl):
+    # Flux gets a distinct Kubernetes client with access to this release.
+    key = root / "release.key"
+    csr = root / "release.csr"
+    run(
+        "openssl",
+        "req",
+        "-new",
+        "-newkey",
+        "rsa:2048",
+        "-nodes",
+        "-subj",
+        "/CN=proof-release-client",
+        "-out",
+        csr,
+        "-keyout",
+        key,
+    )
+    kubectl(
+        "create",
+        "-f",
+        "-",
+        data=json.dumps(
+            {
+                "apiVersion": "certificates.k8s.io/v1",
+                "kind": "CertificateSigningRequest",
+                "metadata": {"name": "release-client"},
+                "spec": {
+                    "request": encoded(csr),
+                    "signerName": "kubernetes.io/kube-apiserver-client",
+                    "usages": ["client auth"],
+                    "expirationSeconds": 3600,
+                },
+            }
+        ),
+    )
+    kubectl("certificate", "approve", "release-client")
+    kubectl("wait", "csr/release-client", "--for=jsonpath={.status.certificate}", "--timeout=30s")
+    cert = kubectl("get", "csr/release-client", "-o", "jsonpath={.status.certificate}")
+    cluster = yaml.safe_load((root / "kubeconfig").read_text())["clusters"][0]["cluster"]
+    identity = {"client-certificate-data": cert, "client-key-data": encoded(key)}
+    path = root / "release.kubeconfig"
+    write(path, config(cluster["server"], cluster["certificate-authority-data"], identity))
+    user = json.loads(run("kubectl", "--kubeconfig", path, "auth", "whoami", "-o", "json"))
+    write(
+        path,
+        config("https://kubernetes.default.svc", cluster["certificate-authority-data"], identity),
+    )
+    kubectl(
+        "-n",
+        "proof-control",
+        "create",
+        "secret",
+        "generic",
+        "release-client",
+        "--from-file=value.yaml=" + str(path),
+    )
+    return user["status"]["userInfo"]
+
+
+def install_policy(root, kubectl):
+    for namespace in ("proof-target", "proof-control", "proof-storage"):
+        kubectl("create", "namespace", namespace)
+    kubectl("apply", "-f", FIXTURE / "access.yaml")
+    user = release_identity(root, kubectl)
+    namespace = "proof-target"
+    cluster_uid = kubectl("get", "ns/kube-system", "-o", "jsonpath={.metadata.uid}")
+    uid = kubectl("get", "ns/" + namespace, "-o", "jsonpath={.metadata.uid}")
+    obj = yaml.safe_load(run("helm", "template", "fence-proof", FIXTURE / "chart", "-n", namespace))
+    obj["metadata"].update(
+        labels={
+            "app.kubernetes.io/managed-by": "Helm",
+            "helm.toolkit.fluxcd.io/name": "fence-proof",
+            "helm.toolkit.fluxcd.io/namespace": "proof-control",
+        },
+        annotations={
+            "meta.helm.sh/release-name": "fence-proof",
+            "meta.helm.sh/release-namespace": namespace,
+        },
+    )
+    audit, admission = root / "audit", root / "admission"
+    policy = dict(
+        schema_version="birbverify.deployment.ownership.v1",
+        cluster_uid=cluster_uid,
+        namespace=namespace,
+        namespace_uid=uid,
+        webhook_name=WEBHOOK,
+        audit_client_sha256=pin(audit / "apiserver.crt"),
+        admission_client_sha256=pin(admission / "apiserver.crt"),
+        closure_client_sha256=pin(admission / "unassigned.crt"),
+        rules=[
+            dict(
+                slot="release-marker",
+                name="release-marker",
+                kind="ConfigMap",
+                object_sha256=object_shape_sha256(obj, generated=False, owned=False),
+                principal_sha256=digest(user),
+            )
+        ],
+    )
+    write(root / "policy.json", policy)
+    return policy
+
+
+def start_container(cluster, stack, image, role, options, program):
+    name = cluster + "-" + role
+    run(
+        "docker",
+        "run",
+        "-d",
+        "--name",
+        name,
+        "--network",
+        "kind",
+        "--read-only",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        *options,
+        image,
+        *program,
+    )
+    stack.callback(run, "docker", "rm", "-f", name, check=False)
+    return name
+
+
+def start_services(root, policy, request_sha, container):
+    state = root / "state"
+    state.mkdir()
+
+    def mounts(pki):
+        options = ["-v", f"{state}:/state"]
+        for filename in ("ca.crt", "server.crt", "server.key"):
+            options.extend(["-v", f"{pki / filename}:/pki/{filename}:ro"])
+        return options
+
+    epoch = provision(
+        state / "journal.sqlite",
+        digest(policy),
+        WEBHOOK,
+        policy["namespace"],
+        policy["cluster_uid"],
+        policy["audit_client_sha256"],
+        "flux-proof",
+        request_sha,
+    )
+    container(
+        "audit",
+        mounts(root / "audit"),
+        [
+            "birbverify.deployment_audit",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "9443",
+            "--epoch",
+            epoch,
+            "--journal",
+            "/state/journal.sqlite",
+            "--installation-sha256",
+            digest(policy),
+            "--cluster-uid",
+            policy["cluster_uid"],
+            "--client-cert-sha256",
+            policy["audit_client_sha256"],
+            "--webhook-name",
+            WEBHOOK,
+            "--namespace",
+            policy["namespace"],
+            "--client-ca",
+            "/pki/ca.crt",
+            "--server-cert",
+            "/pki/server.crt",
+            "--server-key",
+            "/pki/server.key",
+        ],
+    )
+    server = container(
+        "admission",
+        mounts(root / "admission")
+        + ["-v", str(root / "policy.json") + ":/policy.json:ro", "-p", "127.0.0.1::8443"],
+        [
+            "birbverify.deployment_ownership_server",
+            "--host",
+            "0.0.0.0",
+            "--policy",
+            "/policy.json",
+            "--request-id",
+            "flux-proof",
+            "--request-sha256",
+            request_sha,
+            "--epoch",
+            epoch,
+            "--journal",
+            "/state/journal.sqlite",
+            "--client-ca",
+            "/pki/ca.crt",
+            "--tls-cert",
+            "/pki/server.crt",
+            "--tls-key",
+            "/pki/server.key",
+        ],
+    )
+    return server
+
+
+def guard_installation(root, cluster, kubectl, server, namespace):
+    admission = root / "admission"
+    webhook = (
+        (FIXTURE / "webhook.yaml")
+        .read_text()
+        .replace("ADMISSION_SERVER", server)
+        .replace("CA_DATA", encoded(admission / "ca.crt"))
+    )
+    kubectl("create", "-f", "-", data=webhook)
+    api = KubernetesAPI(root / "kubeconfig", "kind-" + cluster)
+    pins = inventory(api, namespace, WEBHOOK)
+    for resource in manifests(pins):
+        kubectl("create", "-f", "-", data=json.dumps(resource))
+    for _ in range(25):
+        try:
+            guard = verify_initial_installation(api, pins)
+            break
+        except ValueError:
+            time.sleep(0.2)
+    else:
+        raise RuntimeError("Installed guard differs from its reviewed configuration")
+    return guard
+
+
+def install_chart(chart_dir, kubectl, container):
+    chart_dir.mkdir()
+    run("helm", "package", FIXTURE / "chart", "-d", chart_dir)
+    run("helm", "repo", "index", chart_dir)
+
+    charts = container(
+        "charts",
+        ["-v", str(chart_dir) + ":/charts:ro"],
+        ["http.server", "8080", "--directory", "/charts"],
+    )
+    charts_ip = run(
+        "docker", "inspect", "-f", "{{.NetworkSettings.Networks.kind.IPAddress}}", charts
+    )
+    manifest = run(
+        "flux",
+        "install",
+        "--export",
+        "--version=v2.6.4",
+        "--components=source-controller,helm-controller",
+    )
+    for tag, sha in FLUX.items():
+        if "image: " + tag + "\n" not in manifest:
+            raise RuntimeError("Unexpected Flux distribution")
+        manifest = manifest.replace("image: " + tag + "\n", f"image: {tag}@sha256:{sha}\n")
+    kubectl("apply", "--server-side", "-f", "-", data=manifest)
+    for deployment in ("source-controller", "helm-controller"):
+        kubectl(
+            "-n", "flux-system", "rollout", "status", "deployment/" + deployment, "--timeout=180s"
+        )
+    release = (
+        (FIXTURE / "release.yaml")
+        .read_text()
+        .replace("http://charts.proof-control.svc.cluster.local", "http://" + charts_ip + ":8080")
+    )
+    kubectl("create", "-f", "-", data=release)
+    for _ in range(75):
+        observed_release = json.loads(
+            kubectl("-n", "proof-control", "get", "hr/fence-proof", "-o", "json")
+        )
+        conditions = observed_release.get("status", {}).get("conditions", [])
+        if any(c["type"] == "Ready" and c["status"] == "True" for c in conditions):
+            break
+        if any(c["type"] == "Stalled" and c["status"] == "True" for c in conditions):
+            raise RuntimeError(next(c["message"] for c in conditions if c["type"] == "Ready"))
+        time.sleep(2)
+    else:
+        raise RuntimeError("Flux did not report a ready Helm release")
+    return observed_release, digest(manifest.encode())
+
+
+def verify_closure(admission, server, policy, request_sha, persisted):
+    port = run("docker", "port", server, "8443/tcp").split(":")[-1]
+
+    def post(route, body):
+        return json.loads(
+            run(
+                "curl",
+                "-fsS",
+                "--noproxy",
+                "*",
+                "--cacert",
+                admission / "ca.crt",
+                "--cert",
+                admission / "unassigned.crt",
+                "--key",
+                admission / "unassigned.key",
+                "--resolve",
+                f"{server}:{port}:127.0.0.1",
+                "-H",
+                "Content-Type: application/json",
+                "--data-binary",
+                json.dumps(body),
+                f"https://{server}:{port}/v1/{route}",
+            )
+        )
+
+    request = {"request_id": "flux-proof", "request_sha256": request_sha}
+    owner = post("observe", request)
+    assert owner["state"] == "active" and owner["installation_sha256"] == digest(policy)
+    invocation = request | {"epoch": owner["epoch"]}
+    assert post("account-result", invocation) == {"status": "absent"}
+    command = invocation | {"reason": "completed"}
+    for _ in range(50):
+        progress = post("close", command)
+        if len(progress["effects"]) == 1 and progress["effects"][0]["state"] == "settled":
+            break
+        time.sleep(0.2)
+    else:
+        raise AssertionError("Authenticated completion did not settle the Helm CREATE")
+    (effect,) = progress["effects"]
+    assert effect["slot"] == "release-marker" and effect["object_uid"] == persisted
+    assert effect["audit_id"] and effect["event_sha256"]
+    assert progress["state"] == "sealed" and progress["release_authorized"] is False
+    run("docker", "restart", server)
+    port = run("docker", "port", server, "8443/tcp").split(":")[-1]
+    for _ in range(50):
+        try:
+            replay = post("close", command)
+            break
+        except subprocess.CalledProcessError:
+            time.sleep(0.2)
+    else:
+        raise RuntimeError("Ownership service did not recover")
+    assert replay == progress
+    return progress
+
+
+def exercise(root, cluster, stack, image):
+    kubectl = partial(
+        run, "kubectl", "--kubeconfig", root / "kubeconfig", "--context", "kind-" + cluster
+    )
+    container = partial(start_container, cluster, stack, image)
+    policy = install_policy(root, kubectl)
+    request_sha = digest({"fixture": "fence-proof", "policy": digest(policy)})
+    server = start_services(root, policy, request_sha, container)
+    namespace = policy["namespace"]
+    guard = guard_installation(root, cluster, kubectl, server, namespace)
+    chart_dir = root / "charts"
+    observed_release, manifest_sha = install_chart(chart_dir, kubectl, container)
+    persisted = kubectl(
+        "-n", namespace, "get", "cm/release-marker", "-o", "jsonpath={.metadata.uid}"
+    )
+    progress = verify_closure(root / "admission", server, policy, request_sha, persisted)
+    chart = chart_dir / "fence-proof-0.1.0.tgz"
+    write(
+        root / "receipt.json",
+        {
+            "scope": "Flux Helm install of one owned ConfigMap",
+            "source_revision": run("git", "-C", REPO, "rev-parse", "HEAD"),
+            "source_dirty": bool(run("git", "-C", REPO, "status", "--porcelain")),
+            "image_id": image,
+            "node": NODE,
+            "flux_images": FLUX,
+            "helm_release_uid": observed_release["metadata"]["uid"],
+            "helm_revision": observed_release["status"]["lastAttemptedRevision"],
+            "flux_manifest_sha256": manifest_sha,
+            "chart_sha256": hashlib.sha256(chart.read_bytes()).hexdigest(),
+            "installation_sha256": digest(policy),
+            "installation_guard": guard,
+            "closure": progress,
+        },
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.parse_args()
+    os.umask(0o077)
+    base = REPO / ".proof" / "deployment"
+    base.mkdir(parents=True, exist_ok=True)
+    root = Path(tempfile.mkdtemp(prefix="bv-flux-", dir=base))
+    cluster = root.name.replace("_", "-")
+    print("Flux proof directory", root, flush=True)
+    run(
+        "docker",
+        "build",
+        "-q",
+        "-f",
+        REPO / "fixtures/deployment.Dockerfile",
+        "--iidfile",
+        root / "image-id",
+        REPO,
+    )
+    with ExitStack() as stack:
+        stack.callback(run, "kind", "delete", "cluster", "--name", cluster, check=False)
+        setup_cluster(root, cluster)
+        exercise(root, cluster, stack, (root / "image-id").read_text().strip())
+    print(root / "receipt.json")
+
+
+if __name__ == "__main__":
+    main()

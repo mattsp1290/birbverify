@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: release-marker
+  namespace: {{ .Release.Namespace }}
+data:
+  value: permitted

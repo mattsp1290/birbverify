@@ -1,0 +1,8 @@
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+- level: RequestResponse
+  namespaces: [proof-target]
+  resources: [{group: "", resources: [configmaps]}]
+  omitStages: [RequestReceived, ResponseStarted]
+- level: None
