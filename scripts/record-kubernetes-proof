@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Publish compact evidence from one revision-bound disposable Kubernetes run."""
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+from birbverify.contract import digest
+from birbverify.kubernetes_contract import KubernetesReceipt, KubernetesRequest
+
+root = Path(__file__).resolve().parents[1]
+run = Path(sys.argv[1])
+application = json.loads((run / "application.json").read_text())
+failures = json.loads((run / "failures.json").read_text())
+revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+request = KubernetesRequest.model_validate(application["request"])
+receipt = KubernetesReceipt.model_validate(application["closure"]["receipt"])
+assert request.producer_revision == revision == receipt.producer_revision
+assert receipt.request_sha256 == digest(request)
+assert receipt.operations_sha256 == digest(application["closure"]["operations"])
+assert set(failures) == {"worker_lost", "cancelled", "held_response", "lost_response"}
+summary = {}
+for name, result in failures.items():
+    closure = result.get("closure")
+    if closure and closure.get("receipt"):
+        parsed = KubernetesReceipt.model_validate(closure["receipt"])
+        assert parsed.producer_revision == revision
+        summary[name] = {
+            "state": closure["state"],
+            "receipt": closure["receipt"],
+            **{key: value for key, value in result.items() if key not in {"execution", "closure"}},
+        }
+    else:
+        assert name == "lost_response"
+        assert result["after_restart"]["state"] == "quarantined"
+        assert result["after_restart"]["receipt"] is None
+        summary[name] = {
+            "state": "quarantined",
+            "receipt": None,
+            "accepted_pod_uid": result["accepted_pod_uid"],
+            "successor_denied": result["successor_denied"],
+            "pending_operation": "create-pod",
+        }
+report = {
+    "implementation_revision": revision,
+    "profile": application["profile"],
+    "kubernetes": application["kubernetes"],
+    "request": application["request"],
+    "request_sha256": digest(request),
+    "closure_receipt": receipt.model_dump(mode="json"),
+    "account_auth": application["account_auth"],
+    "denied_routes": application["denied_routes"],
+    "recreated_policy": application["recreated_policy"],
+    "admission_denial": application["admission_denial"],
+    "runtime_running_containers_after_close": 0,
+    "failure_journeys": summary,
+    "limits": [
+        "disposable kind only",
+        "bare Pod on trusted pinned kubelet",
+        "direct Pod networking",
+        "no Deployment or Flux controller support",
+        "unknown target API outcomes require operator reconciliation",
+        "no deployed Birbforge or shared staging acceptance",
+    ],
+}
+for path, value in (
+    (root / "docs/evidence/kubernetes-acceptance.json", report),
+    (root / "contracts/kubernetes/v1/request.example.json", application["request"]),
+    (root / "contracts/kubernetes/v1/receipt.example.json", receipt.model_dump(mode="json")),
+):
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
+print(revision)

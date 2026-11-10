@@ -1,0 +1,16 @@
+{
+  "candidate_revision": "bc52efc30f7f8ca045cb40daa48fc4e5f1686cbd",
+  "deadline": "2026-11-10T04:09:50.737748Z",
+  "image": "python@sha256:9d2e5553305c7c7b0097999bb17187c69b921ccd6bc9d40e4bb5ebe652c00285",
+  "plan_sha256": "4558b0f9520ccfd5e1f5b9cca3311f88d158b877fd79bac6fd45503a2b97aa84",
+  "policy_revision": "bc52efc30f7f8ca045cb40daa48fc4e5f1686cbd",
+  "producer_revision": "bc52efc30f7f8ca045cb40daa48fc4e5f1686cbd",
+  "request_id": "real-application",
+  "schema_version": "birbverify.kubernetes.v1",
+  "target": {
+    "cluster_uid": "1c6b4104-4c08-4625-af2c-d0bb8a1b91e8",
+    "namespace": "bv-app-527fa39f",
+    "namespace_uid": "b56c6c73-926d-4e21-8302-a702317a68a0",
+    "target_id": "kind-account-auth"
+  }
+}

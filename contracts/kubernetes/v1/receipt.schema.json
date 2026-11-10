@@ -1,0 +1,161 @@
+{
+  "$defs": {
+    "KubernetesBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "cluster_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Cluster Uid",
+          "type": "string"
+        },
+        "namespace": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "namespace_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Namespace Uid",
+          "type": "string"
+        },
+        "target_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_id",
+        "cluster_uid",
+        "namespace",
+        "namespace_uid"
+      ],
+      "title": "KubernetesBinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "candidate_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Candidate Revision",
+      "type": "string"
+    },
+    "effects": {
+      "additionalProperties": true,
+      "title": "Effects",
+      "type": "object"
+    },
+    "image": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9./:_-]*@sha256:[0-9a-f]{64}$",
+      "title": "Image",
+      "type": "string"
+    },
+    "installation_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Installation Sha256",
+      "type": "string"
+    },
+    "operations_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Operations Sha256",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "pod_uid": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Pod Uid"
+    },
+    "policy_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Policy Revision",
+      "type": "string"
+    },
+    "producer_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Producer Revision",
+      "type": "string"
+    },
+    "reason": {
+      "enum": [
+        "completed",
+        "cancelled",
+        "worker_lost"
+      ],
+      "title": "Reason",
+      "type": "string"
+    },
+    "receipt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Receipt Sha256",
+      "type": "string"
+    },
+    "request_id": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "birbverify.kubernetes.closure.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "const": "released",
+      "title": "State",
+      "type": "string"
+    },
+    "target": {
+      "$ref": "#/$defs/KubernetesBinding"
+    },
+    "terminal_proof": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Terminal Proof"
+    }
+  },
+  "required": [
+    "schema_version",
+    "request_id",
+    "request_sha256",
+    "candidate_revision",
+    "producer_revision",
+    "policy_revision",
+    "plan_sha256",
+    "image",
+    "installation_sha256",
+    "pod_uid",
+    "target",
+    "reason",
+    "state",
+    "terminal_proof",
+    "effects",
+    "operations_sha256",
+    "receipt_sha256"
+  ],
+  "title": "KubernetesReceipt",
+  "type": "object"
+}
