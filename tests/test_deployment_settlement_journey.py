@@ -169,6 +169,36 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
                 ],
             }
         )
+        apply(
+            {
+                "apiVersion": "v1",
+                "kind": "Namespace",
+                "metadata": {
+                    "name": "mutator-control",
+                    "labels": {"birbverify.dev/mutate": "yes"},
+                },
+            }
+        )
+
+        def matching_mutator_is_active():
+            result = command(
+                base + ["create", "--dry-run=server", "-f", "-"],
+                data=json.dumps(
+                    {
+                        "apiVersion": "v1",
+                        "kind": "Pod",
+                        "metadata": {"name": "activation-probe", "namespace": "mutator-control"},
+                        "spec": {"containers": [{"name": "pause", "image": pause}]},
+                    }
+                ),
+                check=False,
+            )
+            return (
+                result.returncode != 0
+                and 'failed calling webhook "unreachable.birbverify.test"' in result.stderr
+            )
+
+        wait_for(matching_mutator_is_active)
         discovery = json.loads(
             command(base + ["get", "--raw", "/apis/admissionregistration.k8s.io"]).stdout
         )
@@ -371,6 +401,7 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
             "terminal_audit_annotation": annotation,
             "persisted_pod_uid": persisted["metadata"]["uid"],
             "settled": intent["evidence"],
+            "matching_control_confirmed_mutator_active": True,
             "nonmatching_unreachable_mutator_coexisted": True,
             "mutator_pins_rechecked": True,
             "mutator_selector_drift_rejected_by_classifier": True,
