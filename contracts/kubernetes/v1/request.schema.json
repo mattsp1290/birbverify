@@ -1,0 +1,97 @@
+{
+  "$defs": {
+    "KubernetesBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "cluster_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Cluster Uid",
+          "type": "string"
+        },
+        "namespace": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "namespace_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Namespace Uid",
+          "type": "string"
+        },
+        "target_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_id",
+        "cluster_uid",
+        "namespace",
+        "namespace_uid"
+      ],
+      "title": "KubernetesBinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "candidate_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Candidate Revision",
+      "type": "string"
+    },
+    "deadline": {
+      "format": "date-time",
+      "title": "Deadline",
+      "type": "string"
+    },
+    "image": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9./:_-]*@sha256:[0-9a-f]{64}$",
+      "title": "Image",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "policy_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Policy Revision",
+      "type": "string"
+    },
+    "producer_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Producer Revision",
+      "type": "string"
+    },
+    "request_id": {
+      "maxLength": 63,
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$",
+      "title": "Request Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "birbverify.kubernetes.v1",
+      "default": "birbverify.kubernetes.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "target": {
+      "$ref": "#/$defs/KubernetesBinding"
+    }
+  },
+  "required": [
+    "request_id",
+    "candidate_revision",
+    "producer_revision",
+    "policy_revision",
+    "plan_sha256",
+    "target",
+    "image",
+    "deadline"
+  ],
+  "title": "KubernetesRequest",
+  "type": "object"
+}

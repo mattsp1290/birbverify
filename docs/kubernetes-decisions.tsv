@@ -1,0 +1,10 @@
+ts	phase	decision	why	evidence	result
+2026-11-10T03:30:00Z	frame	Use a separate Kubernetes contract and preserve fixture v1	Existing closure evidence describes Docker and a SQLite counter	src/birbverify/kubernetes_contract.py	implemented
+2026-11-10T03:35:00Z	design	Select static admission and one credentialed gateway	Admission is not storage commit; unknown responses must retain ownership	src/birbverify/kubernetes_target.py	implemented
+2026-11-10T03:38:00Z	design	Use one pinned bare Pod and direct Pod networking	Deployment and endpoint controllers add unjournaled writers	docs/kubernetes-runtime.md	bounded profile
+2026-11-10T03:42:00Z	admission	Pin namespace UID annotation and prohibit namespace mutation	Kubernetes 1.33 CEL does not expose namespace metadata UID; target reads actual UID before each effect	src/birbverify/kubernetes_admission.py	live policy accepted
+2026-11-10T03:46:00Z	cleanup	Gateway performs final deletion after terminal status	The allowed kubelet status writer cannot perform final Pod deletion	tests/test_kubernetes_journeys.py	live application journey passed
+2026-11-10T03:49:00Z	review	Bind plan and policy approval and verify installed admission specs	Echoing caller revision fields and assuming bootstrap are insufficient	tests/test_kubernetes_target.py	unit checks passed
+2026-11-10T03:50:00Z	review	Reject mutating webhook configurations and check actual admitted container	An injected image could otherwise differ from the receipt image	src/birbverify/kubernetes_target.py	implemented
+2026-11-10T03:52:37.767836+00:00	audit	Supersede prior timestamp precision	Earlier rows reconstruct actual decisions but their timestamps were estimates, not measured event times	docs/kubernetes-work-plan.md	Use row order only; timestamp precision withdrawn
+2026-11-10T03:54:03.993908+00:00	review	Use independent inherited-model review and report cross-model review unavailable	Claude CLI rejected its configured API key	.proof/kubernetes-claude-review.txt	No Claude review claimed

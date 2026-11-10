@@ -35,3 +35,10 @@ remain pinned to v1 until an explicit integration change.
 
 The [closure acceptance report](docs/contextless-closure-acceptance.md) records
 the executed source revision, independent review and remaining integration gates.
+
+The [bounded Kubernetes adapter](docs/kubernetes-runtime.md) uses a dedicated
+namespace, a pinned bare Pod, native admission policy, and a durable target
+process. `scripts/verify-kubernetes` creates and removes its own disposable kind
+cluster. It proves an account/auth HTTP fixture, outsider denial, worker loss,
+cancellation, and unknown-response quarantine. It does not deploy shared staging
+or authorize Deployment, Flux, Service, or EndpointSlice controllers.

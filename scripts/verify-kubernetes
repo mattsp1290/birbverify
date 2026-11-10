@@ -1,0 +1,24 @@
+#!/bin/sh
+set -eu
+cd "$(dirname "$0")/.."
+umask 077
+cluster="birbverify-r5rh-$(date +%s)-$$"
+root="$PWD/.proof/kubernetes/$cluster"
+mkdir -p "$root"
+export BIRBVERIFY_KUBE_FIXTURE="$root/kubeconfig"
+export BIRBVERIFY_KUBE_CONTEXT="kind-$cluster"
+export BIRBVERIFY_KUBE_EVIDENCE="$root/application.json"
+export BIRBVERIFY_KUBE_FAILURE_EVIDENCE="$root/failures.json"
+cleanup() {
+    kind delete cluster --name "$cluster"
+}
+trap cleanup EXIT INT TERM
+kind create cluster --name "$cluster" --kubeconfig "$BIRBVERIFY_KUBE_FIXTURE" \
+    --image kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f \
+    --wait 90s
+uv run ruff check src tests fixtures/kubernetes_auth.py scripts/export-kubernetes scripts/record-kubernetes-proof
+uv run ruff format --check src tests fixtures/kubernetes_auth.py scripts/export-kubernetes scripts/record-kubernetes-proof
+uv run pytest -q tests/test_kubernetes_target.py tests/test_kubernetes_service.py \
+    tests/test_kubernetes_journeys.py tests/test_kubernetes_failures.py \
+    --junitxml="$root/junit.xml"
+printf 'Kubernetes proof artifacts: %s\n' "$root"

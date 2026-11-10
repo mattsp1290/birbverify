@@ -1,0 +1,101 @@
+{
+  "$defs": {
+    "KubernetesBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "cluster_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Cluster Uid",
+          "type": "string"
+        },
+        "namespace": {
+          "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "namespace_uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Namespace Uid",
+          "type": "string"
+        },
+        "target_id": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Target Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target_id",
+        "cluster_uid",
+        "namespace",
+        "namespace_uid"
+      ],
+      "title": "KubernetesBinding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "admission_specs": {
+      "additionalProperties": {
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
+      },
+      "maxProperties": 4,
+      "minProperties": 4,
+      "title": "Admission Specs",
+      "type": "object"
+    },
+    "binding": {
+      "$ref": "#/$defs/KubernetesBinding"
+    },
+    "configmap_name": {
+      "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+      "title": "Configmap Name",
+      "type": "string"
+    },
+    "node_name": {
+      "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+      "title": "Node Name",
+      "type": "string"
+    },
+    "node_uid": {
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+      "title": "Node Uid",
+      "type": "string"
+    },
+    "pod_name": {
+      "pattern": "^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$",
+      "title": "Pod Name",
+      "type": "string"
+    },
+    "pod_template": {
+      "additionalProperties": true,
+      "title": "Pod Template",
+      "type": "object"
+    },
+    "policy_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Policy Revision",
+      "type": "string"
+    },
+    "producer_revision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Producer Revision",
+      "type": "string"
+    }
+  },
+  "required": [
+    "producer_revision",
+    "policy_revision",
+    "binding",
+    "pod_name",
+    "configmap_name",
+    "node_name",
+    "node_uid",
+    "pod_template",
+    "admission_specs"
+  ],
+  "title": "KubernetesInstallation",
+  "type": "object"
+}
