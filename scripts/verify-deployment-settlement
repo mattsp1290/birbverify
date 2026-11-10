@@ -4,11 +4,12 @@ cd "$(dirname "$0")/.."
 umask 077
 cluster="birbverify-bsmn-$(date +%s)-$$"
 root="$PWD/.proof/bsmn/$cluster"
-mkdir -p "$root/audit"
+mkdir -p "$root/mailbox"
+python3 fixtures/deployment_audit_pki.py "$root/pki" "$cluster-audit"
 export BIRBVERIFY_SETTLEMENT_ROOT="$root"
 export BIRBVERIFY_SETTLEMENT_CLUSTER="$cluster"
 export BIRBVERIFY_SETTLEMENT_IMAGE="$cluster:fixture"
-docker build -f fixtures/kubernetes-target.Dockerfile -t "$BIRBVERIFY_SETTLEMENT_IMAGE" .
+docker build -f fixtures/deployment.Dockerfile -t "$BIRBVERIFY_SETTLEMENT_IMAGE" .
 cat > "$root/audit-policy.yaml" <<'POLICY'
 apiVersion: audit.k8s.io/v1
 kind: Policy
@@ -33,29 +34,34 @@ nodes:
   - hostPath: "$root/audit-policy.yaml"
     containerPath: /etc/kubernetes/audit-policy.yaml
     readOnly: true
-  - hostPath: "$root/audit"
-    containerPath: /var/log/kubernetes/audit
+  - hostPath: "$root/pki/webhook.kubeconfig"
+    containerPath: /etc/kubernetes/audit-webhook.kubeconfig
+    readOnly: true
   kubeadmConfigPatches:
   - |
     kind: ClusterConfiguration
     apiServer:
       extraArgs:
         audit-policy-file: /etc/kubernetes/audit-policy.yaml
-        audit-log-path: /var/log/kubernetes/audit/events.jsonl
-        audit-log-mode: blocking
+        audit-webhook-config-file: /etc/kubernetes/audit-webhook.kubeconfig
+        audit-webhook-mode: batch
+        audit-webhook-version: audit.k8s.io/v1
+        audit-webhook-batch-max-wait: 1s
+        audit-webhook-initial-backoff: 1s
       extraVolumes:
       - name: audit-policy
         hostPath: /etc/kubernetes/audit-policy.yaml
         mountPath: /etc/kubernetes/audit-policy.yaml
         readOnly: true
         pathType: File
-      - name: audit-log
-        hostPath: /var/log/kubernetes/audit
-        mountPath: /var/log/kubernetes/audit
-        pathType: DirectoryOrCreate
+      - name: audit-webhook
+        hostPath: /etc/kubernetes/audit-webhook.kubeconfig
+        mountPath: /etc/kubernetes/audit-webhook.kubeconfig
+        readOnly: true
+        pathType: File
 CONFIG
 cleanup() {
-    docker rm -f "$cluster-webhook" >/dev/null 2>&1 || true
+    docker rm -f "$cluster-webhook" "$cluster-audit" >/dev/null 2>&1 || true
     kind delete cluster --name "$cluster"
 }
 trap cleanup EXIT INT TERM

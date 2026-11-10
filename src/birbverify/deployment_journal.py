@@ -1,7 +1,7 @@
-"""Private, installation-bound admission intents and trusted local audit settlement.
+"""Private, installation-bound admission intents and API audit settlement.
 
-The caller authorizes the writer and final object before admit(). ingest() accepts
-only events read from the installation-owned audit file, never client submissions.
+The caller authorizes the writer and final object before admit(). The audit
+receiver binds authenticated delivery before a production admission.
 Settlement proves an API effect, not controller quiescence or object termination.
 """
 
@@ -16,6 +16,8 @@ from pathlib import Path
 from birbverify.contract import digest
 
 _SERVER_METADATA = {"uid", "resourceVersion", "generation", "creationTimestamp", "managedFields"}
+MAX_INTENTS = 2048
+MAX_AUDIT_EVENTS = 4096
 _VERBS = {"create": "CREATE", "update": "UPDATE", "patch": "UPDATE", "delete": "DELETE"}
 
 
@@ -28,22 +30,47 @@ def _identifier(value):
 
 
 class Journal:
-    def __init__(self, path, installation_sha256, webhook_name, namespace):
+    def __init__(self, path, installation_sha256, webhook_name, namespace, *, expected_epoch=None):
         if not re.fullmatch(r"[0-9a-f]{64}", installation_sha256):
             raise ValueError("invalid installation digest")
         if not _identifier(namespace) or not _identifier(webhook_name):
             raise ValueError("invalid installation identity")
-        self.path = Path(path)
-        self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.path = Path(path).absolute()
+        self.expected_epoch = expected_epoch
+        if expected_epoch is None:
+            self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        elif not _identifier(expected_epoch):
+            raise ValueError("invalid installed epoch")
         if self.path.is_symlink():
             raise ValueError("journal must not be a symbolic link")
-        fd = os.open(self.path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+        flags = os.O_RDWR | os.O_NOFOLLOW
+        fd = os.open(self.path, flags | (os.O_CREAT if expected_epoch is None else 0), 0o600)
         os.fchmod(fd, 0o600)
         os.close(fd)
         self.webhook_name = webhook_name
         self.namespace = namespace
         identity = _encode([installation_sha256, webhook_name, namespace])
         with self._transaction() as db:
+            if expected_epoch is not None:
+                tables = {
+                    item[0]
+                    for item in db.execute("SELECT name FROM sqlite_schema WHERE type='table'")
+                }
+                required = {
+                    "epoch",
+                    "installation",
+                    "intents",
+                    "audit_events",
+                    "audit_source",
+                    "ownership_slots",
+                    "terminal_status",
+                    "deployment_account_operation",
+                }
+                if not required <= tables:
+                    raise ValueError("installed journal is incomplete")
+                if db.execute("SELECT identity FROM installation").fetchall() != [(identity,)]:
+                    raise ValueError("journal belongs to another installation")
+                return
             db.execute("CREATE TABLE IF NOT EXISTS installation (identity TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS epoch (data TEXT NOT NULL)")
             db.execute(
@@ -54,18 +81,58 @@ class Journal:
                 "audit_id TEXT NOT NULL, stage TEXT NOT NULL, digest TEXT NOT NULL, "
                 "correlated TEXT NOT NULL, PRIMARY KEY (audit_id, stage))"
             )
+            db.execute("CREATE TABLE IF NOT EXISTS audit_source (identity TEXT NOT NULL)")
             saved = db.execute("SELECT identity FROM installation").fetchone()
             if saved and saved[0] != identity:
                 raise ValueError("journal belongs to another installation")
             if not saved:
                 db.execute("INSERT INTO installation VALUES (?)", (identity,))
 
+    def bind_audit_source(self, cluster_uid, client_cert_sha256):
+        if not _identifier(cluster_uid) or not re.fullmatch("[a-f0-9]{64}", client_cert_sha256):
+            raise ValueError("invalid audit source")
+        identity = _encode([cluster_uid, client_cert_sha256])
+        with self._transaction() as db:
+            saved = db.execute("SELECT identity FROM audit_source").fetchone()
+            if saved is None:
+                occupied = db.execute("SELECT 1 FROM intents UNION ALL SELECT 1 FROM audit_events")
+                if occupied.fetchone():
+                    raise ValueError("cannot adopt existing proof journal")
+                db.execute(
+                    "CREATE TABLE ownership_slots("
+                    "slot TEXT PRIMARY KEY, review_uid TEXT UNIQUE NOT NULL)"
+                )
+                db.execute(
+                    "CREATE TABLE terminal_status("
+                    "slot TEXT PRIMARY KEY, digest TEXT NOT NULL, "
+                    "observation TEXT NOT NULL)"
+                )
+                db.execute(
+                    "CREATE TABLE deployment_account_operation ("
+                    "slot INTEGER PRIMARY KEY CHECK(slot=1), epoch TEXT NOT NULL, "
+                    "operation_id TEXT NOT NULL, result TEXT)"
+                )
+                db.execute("INSERT INTO audit_source VALUES (?)", (identity,))
+            elif saved[0] != identity:
+                raise ValueError("audit source already pinned")
+
+    def require_audit_source(self, cluster_uid, client_cert_sha256):
+        with self._transaction() as db:
+            self._require_audit_source(db, cluster_uid, client_cert_sha256)
+
+    def _require_audit_source(self, db, cluster_uid, client_cert_sha256):
+        saved = db.execute("SELECT identity FROM audit_source").fetchone()
+        if saved != (_encode([cluster_uid, client_cert_sha256]),):
+            raise ValueError("audit source mismatch")
+
     @contextmanager
     def _transaction(self):
-        db = sqlite3.connect(self.path, timeout=30)
+        db = sqlite3.connect(self.path.as_uri() + "?mode=rw", uri=True, timeout=30)
         try:
             db.execute("PRAGMA synchronous=FULL")
             db.execute("BEGIN IMMEDIATE")
+            if self.expected_epoch is not None:
+                self._epoch(db, self.expected_epoch)
             yield db
             db.commit()
         except BaseException:
@@ -143,6 +210,9 @@ class Journal:
             if preconditions.get("uid") != metadata["uid"]:
                 raise ValueError("delete requires exact UID precondition")
 
+    def _reserve_intent(self, db, request):
+        """The proof journal relies on its caller for authorization."""
+
     def admit(self, epoch, admission_request):
         encoded = _encode(admission_request)
         if len(encoded.encode()) > 2 * 1024 * 1024:
@@ -169,6 +239,13 @@ class Journal:
                     self._save_intent(db, intent)
                     return response | {"status": {"message": "admission UID reused"}}
             else:
+                if db.execute("SELECT 1 FROM audit_source").fetchone():
+                    if db.execute("SELECT COUNT(*) FROM intents").fetchone()[0] >= MAX_INTENTS:
+                        return response | {"status": {"message": "intent capacity exhausted"}}
+                try:
+                    self._reserve_intent(db, request)
+                except ValueError as error:
+                    return response | {"status": {"message": str(error)}}
                 intent = dict(uid=request["uid"], epoch=epoch, request=request, state="pending")
                 self._save_intent(db, intent)
             return response | {
@@ -312,6 +389,20 @@ class Journal:
     def ingest(self, event):
         """Consume an event from the installation-owned local audit log only."""
         event = json.loads(_encode(event))
+        with self._transaction() as db:
+            if db.execute("SELECT 1 FROM audit_source").fetchone():
+                raise ValueError("bound journals require authenticated delivery")
+            epoch = self._ingest(db, event, authenticated=False)
+            return self._snapshot(db, epoch) if epoch else None
+
+    def ingest_audit_batch(self, cluster_uid, client_cert_sha256, events):
+        """Internal receiver entry point. The receiver authenticates the TLS peer first."""
+        with self._transaction() as db:
+            self._require_audit_source(db, cluster_uid, client_cert_sha256)
+            for event in events:
+                self._ingest(db, event, authenticated=True)
+
+    def _ingest(self, db, event, *, authenticated):
         prefix = self.webhook_name + "/intent-"
         annotations = event.get("annotations", {})
         if not isinstance(annotations, dict):
@@ -323,47 +414,64 @@ class Journal:
         ]
         if not correlated:
             return None
-        with self._transaction() as db:
+        if authenticated and (
+            not _identifier(event.get("auditID"))
+            or event.get("stage") != "ResponseComplete"
+            or len(correlated) != 1
+            or any(not _identifier(uid) or not _identifier(epoch) for uid, epoch in correlated)
+            or "impersonatedUser" in event
+        ):
             row = self._epoch(db)
-            event_hash = digest(event)
-            audit_id, stage = event.get("auditID"), event.get("stage")
-            conflicting_event = False
-            if isinstance(audit_id, str) and audit_id and isinstance(stage, str) and stage:
-                previous = db.execute(
-                    "SELECT digest, correlated FROM audit_events WHERE audit_id=? AND stage=?",
-                    (audit_id, stage),
-                ).fetchone()
-                if previous:
-                    if previous[0] == event_hash:
-                        return self._snapshot(db, row["epoch"])
-                    conflicting_event = True
-                    correlated = list(dict(json.loads(previous[1]) + correlated).items())
-                else:
-                    db.execute(
-                        "INSERT INTO audit_events VALUES (?, ?, ?, ?)",
-                        (audit_id, stage, event_hash, _encode(correlated)),
-                    )
-            for uid, epoch in correlated:
-                saved = db.execute("SELECT data FROM intents WHERE uid=?", (uid,)).fetchone()
-                if not saved:
-                    row.update(state="quarantined", reason="audit intent absent from journal")
+            row.update(state="quarantined", reason="malformed or ambiguous audit completion")
+            db.execute("UPDATE epoch SET data=?", (_encode(row),))
+            return row["epoch"]
+        row = self._epoch(db)
+        event_hash = digest(event)
+        audit_id, stage = event.get("auditID"), event.get("stage")
+        conflicting_event = False
+        if isinstance(audit_id, str) and audit_id and isinstance(stage, str) and stage:
+            previous = db.execute(
+                "SELECT digest, correlated FROM audit_events WHERE audit_id=? AND stage=?",
+                (audit_id, stage),
+            ).fetchone()
+            if previous:
+                if previous[0] == event_hash:
+                    return row["epoch"]
+                conflicting_event = True
+                correlated = list(dict(json.loads(previous[1]) + correlated).items())
+            else:
+                if authenticated and (
+                    db.execute("SELECT COUNT(*) FROM audit_events").fetchone()[0]
+                    >= MAX_AUDIT_EVENTS
+                ):
+                    row.update(state="quarantined", reason="audit identity capacity exhausted")
                     db.execute("UPDATE epoch SET data=?", (_encode(row),))
-                    continue
-                intent = json.loads(saved[0])
-                if intent["state"] == "quarantined":
-                    continue
-                if intent.get("event_sha256") == event_hash and not conflicting_event:
-                    continue
-                try:
-                    if conflicting_event:
-                        raise ValueError("audit identity reused for a different event")
-                    if len(correlated) != 1 or epoch != intent["epoch"]:
-                        raise ValueError("ambiguous audit intent correlation")
-                    if intent.get("event_sha256"):
-                        raise ValueError("conflicting audit completion replay")
-                    evidence = self._completion(intent, event)
-                    intent.update(state="settled", evidence=evidence, event_sha256=event_hash)
-                except (ValueError, TypeError, AttributeError, KeyError) as error:
-                    intent.update(state="quarantined", reason=str(error), event_sha256=event_hash)
-                self._save_intent(db, intent)
-            return self._snapshot(db, row["epoch"])
+                    return row["epoch"]
+                db.execute(
+                    "INSERT INTO audit_events VALUES (?, ?, ?, ?)",
+                    (audit_id, stage, event_hash, _encode(correlated)),
+                )
+        for uid, epoch in correlated:
+            saved = db.execute("SELECT data FROM intents WHERE uid=?", (uid,)).fetchone()
+            if not saved:
+                row.update(state="quarantined", reason="audit intent absent from journal")
+                db.execute("UPDATE epoch SET data=?", (_encode(row),))
+                continue
+            intent = json.loads(saved[0])
+            if intent["state"] == "quarantined":
+                continue
+            if intent.get("event_sha256") == event_hash and not conflicting_event:
+                continue
+            try:
+                if conflicting_event:
+                    raise ValueError("audit identity reused for a different event")
+                if len(correlated) != 1 or epoch != intent["epoch"]:
+                    raise ValueError("ambiguous audit intent correlation")
+                if intent.get("event_sha256"):
+                    raise ValueError("conflicting audit completion replay")
+                evidence = self._completion(intent, event)
+                intent.update(state="settled", evidence=evidence, event_sha256=event_hash)
+            except (ValueError, TypeError, AttributeError, KeyError) as error:
+                intent.update(state="quarantined", reason=str(error), event_sha256=event_hash)
+            self._save_intent(db, intent)
+        return row["epoch"]

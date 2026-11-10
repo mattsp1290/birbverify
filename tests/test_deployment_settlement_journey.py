@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from birbverify.deployment_bootstrap import provision
 from birbverify.deployment_mutators import (
     MutatorRejected,
     WriteScope,
@@ -43,6 +44,12 @@ def wait_for(probe, seconds=20):
 def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
     source_paths = [
         "src/birbverify/deployment_journal.py",
+        "src/birbverify/deployment_audit.py",
+        "src/birbverify/deployment_http.py",
+        "fixtures/deployment_audit_pki.py",
+        "fixtures/deployment.Dockerfile",
+        "pyproject.toml",
+        "uv.lock",
         "src/birbverify/deployment_mutators.py",
         "src/birbverify/contract.py",
         "fixtures/deployment_admission_fixture.py",
@@ -60,7 +67,21 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
     nodes = json.loads(command(base + ["get", "nodes", "-o", "json"]).stdout)["items"]
     assert [node["metadata"]["name"] for node in nodes] == [cluster + "-control-plane"]
     mailbox = root / "mailbox"
-    mailbox.mkdir()
+    pki = root / "pki"
+    pin = (pki / "pin").read_text().strip()
+    cluster_uid = command(
+        base + ["get", "namespace", "kube-system", "-o", "jsonpath={.metadata.uid}"]
+    ).stdout
+    epoch = provision(
+        mailbox / "journal.sqlite",
+        "a" * 64,
+        "settlement.birbverify.test",
+        "settlement-proof",
+        cluster_uid,
+        pin,
+        "native-controller-proof",
+        "b" * 64,
+    )
     name = cluster + "-webhook"
     command(
         [
@@ -84,6 +105,24 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
     )
     image = os.environ["BIRBVERIFY_SETTLEMENT_IMAGE"]
     image_id = command(["docker", "image", "inspect", image, "--format", "{{.Id}}"]).stdout.strip()
+    module_paths = [path for path in source_paths if path.startswith("src/")]
+    installed = command(
+        [
+            "docker",
+            "run",
+            "--rm",
+            "--entrypoint",
+            "python",
+            image,
+            "-c",
+            "import hashlib,json,birbverify,pathlib,sys; "
+            "root=pathlib.Path(birbverify.__file__).parent; "
+            "print(json.dumps([hashlib.sha256((root/name).read_bytes()).hexdigest() "
+            "for name in sys.argv[1:]]))",
+            *[Path(path).name for path in module_paths],
+        ]
+    )
+    assert json.loads(installed.stdout) == [source_hashes[path] for path in module_paths]
     pause = (
         "registry.k8s.io/pause:3.10@"
         "sha256:ee6521f290b2168b6e0935a181d4cff9be1ac3f505666ef0e3c98fae8199917a"
@@ -102,17 +141,69 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
             "-v",
             str(mailbox) + ":/proof",
             "-v",
-            str(ROOT) + ":/repo:ro",
+            str(ROOT / "fixtures/deployment_admission_fixture.py") + ":/fixture.py:ro",
             "-e",
             "SETTLEMENT_ROOT=/proof",
             "-e",
-            "PYTHONPATH=/repo/src",
+            "SETTLEMENT_EPOCH=" + epoch,
             "-e",
             "SETTLEMENT_PAUSE_IMAGE=" + pause,
             "--entrypoint",
             "python",
             image,
-            "/repo/fixtures/deployment_admission_fixture.py",
+            "/fixture.py",
+        ]
+    )
+
+    audit = cluster + "-audit"
+    command(
+        [
+            "docker",
+            "run",
+            "-d",
+            "--name",
+            audit,
+            "--network",
+            "kind",
+            "--user",
+            "0",
+            "-v",
+            str(mailbox) + ":/proof",
+            "-v",
+            str(pki / "server.crt") + ":/server.crt:ro",
+            "-v",
+            str(pki / "server.key") + ":/server.key:ro",
+            "-v",
+            str(pki / "ca.crt") + ":/ca.crt:ro",
+            "--entrypoint",
+            "python",
+            image,
+            "-m",
+            "birbverify.deployment_audit",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "9443",
+            "--journal",
+            "/proof/journal.sqlite",
+            "--installation-sha256",
+            "a" * 64,
+            "--webhook-name",
+            "settlement.birbverify.test",
+            "--namespace",
+            "settlement-proof",
+            "--epoch",
+            epoch,
+            "--cluster-uid",
+            cluster_uid,
+            "--client-ca",
+            "/ca.crt",
+            "--client-cert-sha256",
+            pin,
+            "--server-cert",
+            "/server.crt",
+            "--server-key",
+            "/server.key",
         ]
     )
 
@@ -142,6 +233,22 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
 
     try:
         wait_for((mailbox / "ready.json").exists)
+        wait_for(
+            lambda: (
+                command(
+                    [
+                        "docker",
+                        "exec",
+                        audit,
+                        "python",
+                        "-c",
+                        "import socket; socket.create_connection(('127.0.0.1',9443),2).close()",
+                    ],
+                    check=False,
+                ).returncode
+                == 0
+            )
+        )
         apply({"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": "settlement-proof"}})
         apply(
             {
@@ -306,6 +413,7 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
         )
         assert pods_at_seal["items"] == []
         assert control("restart")["pending"] == [held["uid"]]
+        command(["docker", "pause", audit])
         (mailbox / "unblock").touch()
 
         def pods():
@@ -320,29 +428,20 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
         assert control("snapshot")["pending"] == [held["uid"]]
         annotation = "settlement.birbverify.test/intent-" + held["uid"]
 
-        def completion():
-            lines = (root / "audit" / "events.jsonl").read_text().splitlines()
-            for line in lines:
-                try:
-                    event = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if (
-                    annotation in event.get("annotations", {})
-                    and event.get("stage") == "ResponseComplete"
-                ):
-                    return event
-            return None
+        command(["docker", "unpause", audit])
 
-        event = wait_for(completion)
-        assert event["responseStatus"]["code"] == 201
-        assert event["responseObject"]["metadata"]["uid"] == persisted["metadata"]["uid"]
-        settled = control("ingest", event=event)
+        def completion():
+            snapshot = control("snapshot")
+            assert snapshot["state"] == "sealed", snapshot["state"]
+            return snapshot if snapshot["settled"] else None
+
+        settled = wait_for(completion, seconds=60)
         assert settled["pending"] == [] and settled["quarantined"] == []
         assert settled["settled"] == [held["uid"]]
         intent = settled["intents"][0]
         assert intent["evidence"]["object_uid"] == persisted["metadata"]["uid"]
         assert intent["evidence"]["termination_proven"] is False
+        command(["docker", "restart", audit])
         assert control("restart")["settled"] == [held["uid"]]
         denied_pod = json.loads(json.dumps(held["request"]["object"]))
         denied_pod["metadata"].pop("uid", None)
@@ -395,9 +494,10 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
             "restart_preserved_pending": True,
             "persisted_after_seal": True,
             "missing_audit_kept_pending": True,
-            "terminal_audit_id": event["auditID"],
-            "terminal_audit_stage": event["stage"],
-            "terminal_audit_level": event["level"],
+            "terminal_audit_id": intent["evidence"]["audit_id"],
+            "audit_event_sha256": intent["event_sha256"],
+            "audit_receiver_client_cert_sha256": pin,
+            "cluster_uid": cluster_uid,
             "terminal_audit_annotation": annotation,
             "persisted_pod_uid": persisted["metadata"]["uid"],
             "settled": intent["evidence"],
@@ -422,4 +522,4 @@ def test_native_controller_persists_after_seal_and_audit_settles_exact_uid():
         (root / "settlement.json").write_text(json.dumps(evidence, indent=2) + "\n")
     finally:
         command(["docker", "logs", name], check=False)
-        command(["docker", "rm", "-f", name], check=False)
+        command(["docker", "rm", "-f", name, audit], check=False)
