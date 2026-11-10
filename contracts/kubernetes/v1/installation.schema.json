@@ -1,5 +1,32 @@
 {
   "$defs": {
+    "AdmissionPin": {
+      "additionalProperties": false,
+      "properties": {
+        "generation": {
+          "minimum": 1,
+          "title": "Generation",
+          "type": "integer"
+        },
+        "spec_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Spec Sha256",
+          "type": "string"
+        },
+        "uid": {
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$",
+          "title": "Uid",
+          "type": "string"
+        }
+      },
+      "required": [
+        "spec_sha256",
+        "uid",
+        "generation"
+      ],
+      "title": "AdmissionPin",
+      "type": "object"
+    },
     "KubernetesBinding": {
       "additionalProperties": false,
       "properties": {
@@ -38,8 +65,7 @@
   "properties": {
     "admission_specs": {
       "additionalProperties": {
-        "pattern": "^[0-9a-f]{64}$",
-        "type": "string"
+        "$ref": "#/$defs/AdmissionPin"
       },
       "maxProperties": 4,
       "minProperties": 4,

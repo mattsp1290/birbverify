@@ -1,4 +1,4 @@
-"""Pinned Kubernetes transport for the credential-owning target process."""
+"""Explicit-context Kubernetes transport for the credential-owning target process."""
 
 import json
 import subprocess

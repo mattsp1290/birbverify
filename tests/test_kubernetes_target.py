@@ -19,6 +19,7 @@ class Missing(Exception):
 class FakeAPI:
     def __init__(self):
         self.objects = {
+            "/apis/admissionregistration.k8s.io": {"versions": [{"version": "v1"}]},
             "/apis/admissionregistration.k8s.io/v1/mutatingwebhookconfigurations": {"items": []},
             "/api/v1/namespaces/kube-system": {"metadata": {"uid": "cluster"}},
             "/api/v1/namespaces/app": {"metadata": {"uid": "namespace"}},
@@ -69,13 +70,20 @@ def setup(tmp_path):
         target_id="target", cluster_uid="cluster", namespace="app", namespace_uid="namespace"
     )
     policies = {
-        f"/apis/admissionregistration.k8s.io/v1/{resource}/birbverify-app{suffix}": digest(
-            {"fixture": True}
-        )
+        f"/apis/admissionregistration.k8s.io/v1/{resource}/birbverify-app{suffix}": {
+            "spec_sha256": digest({"fixture": True}),
+            "uid": resource + suffix,
+            "generation": 1,
+        }
         for resource in ("validatingadmissionpolicies", "validatingadmissionpolicybindings")
         for suffix in ("", "-identity")
     }
-    api.objects.update({path: {"spec": {"fixture": True}} for path in policies})
+    api.objects.update(
+        {
+            path: {"spec": {"fixture": True}, "metadata": {"uid": pin["uid"], "generation": 1}}
+            for path, pin in policies.items()
+        }
+    )
     installation = KubernetesInstallation(
         producer_revision="b" * 40,
         admission_specs=policies,
@@ -199,10 +207,15 @@ def test_terminal_phase_without_terminated_container_retains_target(setup):
 
 def test_close_before_admission_seals_late_worker(setup):
     target, api, request = setup
-    assert target.close(request, "worker_lost")["state"] == "quarantined"
-    assert target.begin(request)["state"] == "quarantined"
-    assert target.execute(request)["state"] == "quarantined"
+    assert target.close(request, "worker_lost")["state"] == "sealed_unadmitted"
+    assert target.begin(request)["state"] == "sealed_unadmitted"
+    assert target.execute(request)["state"] == "sealed_unadmitted"
     assert not api.calls
+
+    successor = request.model_copy(update={"request_id": "r2"})
+    assert target.begin(successor)["state"] == "active"
+    assert target.close(request)["state"] == "sealed_unadmitted"
+    assert target.inspect(successor)["state"] == "active"
 
 
 def test_installed_producer_is_authoritative(setup):
@@ -273,3 +286,82 @@ def test_admitted_image_substitution_quarantines(setup):
     api.request = substitute
     assert target.execute(request)["state"] == "quarantined"
     assert target.close(request)["receipt"] is None
+
+
+@pytest.mark.parametrize("field,value", [("uid", "recreated"), ("generation", 3)])
+def test_recreated_or_reverted_admission_policy_is_rejected(setup, field, value):
+    target, api, request = setup
+    target.begin(request)
+    api.objects[next(iter(target.installation.admission_specs))]["metadata"][field] = value
+    assert target.execute(request)["state"] == "quarantined"
+    assert not any(method != "GET" for method, _, _ in api.calls)
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"securityContext": {"capabilities": {"add": ["SYS_ADMIN"]}}},
+        {"ports": [{"containerPort": 8080, "hostPort": 8080}]},
+        {"securityContext": {"procMount": "Unmasked"}},
+        {"securityContext": {"seccompProfile": {"type": "Unconfined"}}},
+    ],
+)
+def test_privileged_template_rejected_before_api(setup, change):
+    target, api, request = setup
+    installed = target.installation.model_copy(deep=True)
+    installed.pod_template["spec"]["containers"][0].update(change)
+    with pytest.raises(ValueError, match="privileges"):
+        KubernetesTarget(target.path.parent / "unsafe.db", api, installed)
+    assert not api.calls
+
+
+def test_mutating_admission_policy_is_rejected(setup):
+    target, api, request = setup
+    api.objects["/apis/admissionregistration.k8s.io/v1/mutatingadmissionpolicies"] = {
+        "items": [{"metadata": {"name": "inject"}}]
+    }
+    with pytest.raises(ValueError, match="mutating admission"):
+        target.begin(request)
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"securityContext": {"sysctls": [{"name": "kernel.shm_rmid_forced", "value": "1"}]}},
+        {"securityContext": {"seccompProfile": {"type": "Unconfined"}}},
+        {"securityContext": {"appArmorProfile": {"type": "Unconfined"}}},
+    ],
+)
+def test_pod_level_privileges_rejected(setup, change):
+    target, api, request = setup
+    installed = target.installation.model_copy(deep=True)
+    installed.pod_template["spec"].update(change)
+    with pytest.raises(ValueError, match="privileges"):
+        KubernetesTarget(target.path.parent / "unsafe.db", api, installed)
+
+
+def test_legacy_apparmor_annotation_rejected(setup):
+    target, api, request = setup
+    installed = target.installation.model_copy(deep=True)
+    installed.pod_template["metadata"] = {
+        "annotations": {"container.apparmor.security.beta.kubernetes.io/app": "unconfined"}
+    }
+    with pytest.raises(ValueError, match="profile"):
+        KubernetesTarget(target.path.parent / "unsafe.db", api, installed)
+
+
+def test_policy_change_during_cleanup_cannot_release(setup):
+    target, api, request = setup
+    target.begin(request)
+    original = api.request
+
+    def changed(method, path, body=None):
+        result = original(method, path, body)
+        if method == "PUT":
+            api.objects[next(iter(target.installation.admission_specs))]["metadata"]["uid"] = "new"
+        return result
+
+    api.request = changed
+    closed = target.close(request, "cancelled")
+    assert closed["state"] == "quarantined"
+    assert closed["receipt"] is None

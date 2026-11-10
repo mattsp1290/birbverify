@@ -51,6 +51,7 @@ report = {
     "closure_receipt": receipt.model_dump(mode="json"),
     "account_auth": application["account_auth"],
     "denied_routes": application["denied_routes"],
+    "recreated_policy": application["recreated_policy"],
     "admission_denial": application["admission_denial"],
     "runtime_running_containers_after_close": 0,
     "failure_journeys": summary,

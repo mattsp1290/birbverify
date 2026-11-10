@@ -47,5 +47,11 @@ Ferry enrollment, Flux desired state, and shared staging remain later gates.
 An attempted Claude Opus read-only review failed with an invalid API key before
 reviewing files. Independent inherited-model review found and drove fixes for
 raw error disclosure, policy/plan approval, and admitted image substitution.
-Cross-model review remains unavailable. The decision log explicitly withdraws
+The user then authorized retrying with the API key unset. Claude Opus completed the cross-model review. The decision log explicitly withdraws
 estimated timestamp precision in its reconstructed opening rows.
+
+Claude found three hardening gaps. Added capabilities and host ports now fail
+profile validation. Admission pins now include object UID and generation.
+`sealed_unadmitted` keeps a cancelled request closed without retaining unrelated
+work. Mutating admission policies are rejected alongside webhooks. The initial
+implementation pin is superseded after these fixes and another live proof.

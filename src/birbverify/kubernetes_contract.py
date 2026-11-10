@@ -36,6 +36,12 @@ class KubernetesRequest(Record):
         return self
 
 
+class AdmissionPin(Record):
+    spec_sha256: Sha
+    uid: Id
+    generation: Annotated[int, Field(ge=1, strict=True)]
+
+
 class KubernetesInstallation(Record):
     producer_revision: Commit
     policy_revision: Commit
@@ -45,7 +51,7 @@ class KubernetesInstallation(Record):
     node_name: Name
     node_uid: Id
     pod_template: dict
-    admission_specs: dict[str, Sha] = Field(min_length=4, max_length=4)
+    admission_specs: dict[str, AdmissionPin] = Field(min_length=4, max_length=4)
 
 
 class KubernetesClosureReceipt(Record):

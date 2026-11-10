@@ -1,5 +1,6 @@
 """Opt-in real API proof, restricted to the disposable kind fixture."""
 
+import copy
 import json
 import os
 import subprocess
@@ -94,7 +95,7 @@ def installation(tmp_path):
             "rules": [
                 {
                     "apiGroups": ["admissionregistration.k8s.io"],
-                    "resources": ["mutatingwebhookconfigurations"],
+                    "resources": ["mutatingwebhookconfigurations", "mutatingadmissionpolicies"],
                     "verbs": ["list"],
                 },
                 {
@@ -223,7 +224,12 @@ def installation(tmp_path):
             else "validatingadmissionpolicybindings"
         )
         path = f"/apis/admissionregistration.k8s.io/v1/{resource}/{obj['metadata']['name']}"
-        admission_specs[path] = digest(admin.request("GET", path)["spec"])
+        policy = admin.request("GET", path)
+        admission_specs[path] = {
+            "spec_sha256": digest(policy["spec"]),
+            "uid": policy["metadata"]["uid"],
+            "generation": policy["metadata"]["generation"],
+        }
     installed = KubernetesInstallation(
         binding=binding,
         admission_specs=admission_specs,
@@ -300,6 +306,24 @@ def test_real_application_and_closure(installation, tmp_path):
                 "spec": pod["spec"],
             },
         )
+    for extra_privilege in ("capability", "host_port"):
+        invalid = copy.deepcopy(pod["spec"])
+        container = invalid["containers"][0]
+        if extra_privilege == "capability":
+            container["securityContext"]["capabilities"]["add"] = ["SYS_ADMIN"]
+        else:
+            container["ports"][0]["hostPort"] = 8080
+        with pytest.raises(ApiError, match="unsafe pod shape"):
+            clients["target"].request(
+                "POST",
+                f"/api/v1/namespaces/{installed.binding.namespace}/pods",
+                {
+                    "apiVersion": "v1",
+                    "kind": "Pod",
+                    "metadata": {"name": "account-auth"},
+                    "spec": invalid,
+                },
+            )
     namespace_path = f"/api/v1/namespaces/{installed.binding.namespace}"
     with pytest.raises(ApiError, match="namespace identity is pinned"):
         admin.request("PUT", namespace_path, admin.request("GET", namespace_path))
@@ -352,6 +376,25 @@ def test_real_application_and_closure(installation, tmp_path):
         "GET", f"/api/v1/namespaces/{installed.binding.namespace}/configmaps/revision"
     )
     assert marker["data"] == {"baseline": "clean"}
+    successor = request_for(installed, "policy-recreated")
+    target.begin(successor)
+    path = next(
+        path for path in installed.admission_specs if "/validatingadmissionpolicybindings/" in path
+    )
+    policy = admin.request("GET", path)
+    admin.request("DELETE", path, {"apiVersion": "v1", "kind": "DeleteOptions"})
+    admin.request(
+        "POST",
+        path.rsplit("/", 1)[0],
+        {
+            "apiVersion": policy["apiVersion"],
+            "kind": policy["kind"],
+            "metadata": {"name": policy["metadata"]["name"]},
+            "spec": policy["spec"],
+        },
+    )
+    assert target.execute(successor)["state"] == "quarantined"
+    assert not target.inspect(successor)["operations"]
     evidence = {
         "profile": "disposable-kind-bare-pod",
         "request": request.model_dump(mode="json"),
@@ -363,7 +406,15 @@ def test_real_application_and_closure(installation, tmp_path):
         "observation": observation,
         "pod_uid": pod["metadata"]["uid"],
         "account_auth": "passed",
-        "denied_routes": ["outsider-configmap", "target-unlisted-pod", "namespace-update", "exec"],
+        "recreated_policy": "quarantined_before_effect",
+        "denied_routes": [
+            "outsider-configmap",
+            "target-unlisted-pod",
+            "namespace-update",
+            "exec",
+            "extra-capability",
+            "host-port",
+        ],
         "runtime_running_containers_after_close": 0,
         "kubernetes": admin.request("GET", "/version"),
     }

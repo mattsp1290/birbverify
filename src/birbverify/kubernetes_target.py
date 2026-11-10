@@ -45,6 +45,10 @@ class KubernetesTarget:
         spec = template.get("spec", {})
         if (
             template.get("metadata", {}).get("ownerReferences")
+            or any(
+                key.startswith("container.apparmor.security.beta.kubernetes.io/")
+                for key in template.get("metadata", {}).get("annotations", {})
+            )
             or spec.get("volumes")
             or len(spec.get("containers", [])) != 1
             or spec.get("initContainers")
@@ -54,6 +58,20 @@ class KubernetesTarget:
             or spec.get("hostIPC")
         ):
             raise ValueError("unsupported installed pod profile")
+        container = spec["containers"][0]
+        security = container.get("securityContext", {})
+        if (
+            security.get("capabilities", {}).get("add")
+            or any(port.get("hostPort", 0) for port in container.get("ports", []))
+            or security.get("procMount") == "Unmasked"
+            or spec.get("securityContext", {}).get("sysctls")
+            or any(
+                context.get(kind, {}).get("type") == "Unconfined"
+                for context in (security, spec.get("securityContext", {}))
+                for kind in ("seccompProfile", "appArmorProfile")
+            )
+        ):
+            raise ValueError("unsupported installed pod privileges")
         with self._locked() as db:
             db.execute(
                 "CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY, data TEXT NOT NULL)"
@@ -128,9 +146,21 @@ class KubernetesTarget:
         )
         if webhooks["items"]:
             raise ValueError("mutating webhooks are outside the bounded target profile")
+        group = self.api.request("GET", "/apis/admissionregistration.k8s.io")
+        for version in group["versions"]:
+            policies = self._get(
+                f"/apis/admissionregistration.k8s.io/{version['version']}/mutatingadmissionpolicies"
+            )
+            if policies and policies["items"]:
+                raise ValueError("mutating admission policies are outside the bounded profile")
         for path, expected in installation.admission_specs.items():
             policy = self._get(path)
-            if policy is None or digest(policy["spec"]) != expected:
+            if (
+                policy is None
+                or digest(policy["spec"]) != expected.spec_sha256
+                or policy["metadata"]["uid"] != expected.uid
+                or policy["metadata"]["generation"] != expected.generation
+            ):
                 raise ValueError("admission policy missing or changed")
 
     def _effect(self, db, row, operation, method, path, body):
@@ -173,7 +203,7 @@ class KubernetesTarget:
             if request.deadline <= datetime.now(UTC):
                 raise ValueError("request deadline expired")
             for (data,) in db.execute("SELECT data FROM requests"):
-                if json.loads(data)["state"] != "released":
+                if json.loads(data)["state"] not in {"released", "sealed_unadmitted"}:
                     raise ValueError("target retained by another request")
             self._verify()
             baseline = self._get(self._path("configmaps", self.installation.configmap_name))
@@ -301,7 +331,7 @@ class KubernetesTarget:
                 row = dict(
                     request_id=request.request_id,
                     request_sha256=digest(request),
-                    state="quarantined",
+                    state="sealed_unadmitted",
                     reason=reason,
                     error="closed before admission; late admission prohibited",
                     operations={},
@@ -310,7 +340,7 @@ class KubernetesTarget:
                 self._save(db, row)
                 return row
             row = self._load(db, request)
-            if row["state"] in {"released", "quarantined"}:
+            if row["state"] in {"released", "quarantined", "sealed_unadmitted"}:
                 return row
             row.update(state="closing", reason=row.get("reason", reason))
             self._save(db, row)
@@ -417,6 +447,7 @@ class KubernetesTarget:
                     "terminal_proof": row.get("terminal_proof"),
                     "operations_sha256": digest(row["operations"]),
                 }
+                self._verify()
                 receipt = KubernetesClosureReceipt.model_validate(receipt).model_dump(mode="json")
                 row.update(state="released", receipt={**receipt, "receipt_sha256": digest(receipt)})
                 self._save(db, row)

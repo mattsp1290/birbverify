@@ -64,7 +64,7 @@ The bootstrap administrator, admission configuration, and pinned kubelet are tru
 
 ## Installation approval and admission inventory
 
-The installation pins `producer_revision`, `policy_revision`, `pod_template`, and four admission policy and binding spec digests in `admission_specs`. The request's `plan_sha256` must equal the canonical digest of `pod_template`. The target checks all four installed specs before every effect. It rejects clusters with any mutating webhook configuration. This is a conservative profile restriction, including webhooks that would not match this namespace.
+The installation pins `producer_revision`, `policy_revision`, `pod_template`, and four admission policy and binding pins in `admission_specs`. Each pin contains `spec_sha256`, `uid`, and `generation`. The request's `plan_sha256` must equal the canonical digest of `pod_template`. The target checks all four installed object identities, generations, and specs before every effect. It rejects clusters with any mutating webhook configuration or mutating admission policy. This is a conservative profile restriction, including webhooks that would not match this namespace.
 
 Kubernetes 1.33 does not expose namespace UID in the CEL namespace metadata type. Bootstrap records the observed UID in `birbverify.dev/namespace-uid`. The name-matched namespace guard then denies all namespace mutations. Each target effect independently reads the actual namespace UID, cluster identity and node UID. Changing or removing admission policy requires installation-owner reconciliation.
 
@@ -76,3 +76,15 @@ Kubernetes 1.33 does not expose namespace UID in the CEL namespace metadata type
 | Every operational identity | No mutation of the pinned Namespace object. |
 
 The target account additionally reads the named Pod, ConfigMap, node, namespace, kube-system namespace, four admission objects, and the mutating webhook list. It cannot edit policies, bindings, RBAC, namespaces, or credentials. Bootstrap administration and the pinned node remain trusted infrastructure. The account/auth fixture stores disposable data in memory and tests the execution contract only.
+
+A closure received before admission returns `sealed_unadmitted` without a release receipt. That request ID can never execute. It does not retain the target or affect an unrelated active request. Birbforge must handle this explicit no-acquisition state separately from released cleanup evidence. A caller cannot treat it as evidence that another request stopped.
+
+The approved template and admission rules reject added capabilities, host ports,
+Unmasked proc mounts, Unconfined seccomp or AppArmor profiles, and sysctls.
+This profile is not a general-purpose hostile-code sandbox. The installer owns
+the template and the local executable search path. The packaged kubectl image
+is digest-pinned.
+
+Pre-publication fixture journals are not migrated. An installation-pin change
+rejects an old journal. Historical quarantined stores require explicit operator
+reconciliation and must not be reused as fresh installations.
