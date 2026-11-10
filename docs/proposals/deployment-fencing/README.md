@@ -41,16 +41,24 @@ or mutating webhook configurations. Those remain Birbhomes installation inputs.
 
 ## Design gate
 
-[Admission journaling](admission-design.md) can record writes before allow, but
-needs authoritative completion evidence that Kubernetes webhooks do not provide.
-[A credentialed API proxy](proxy-design.md) can record responses, but needs every
-native controller write routed through it with direct bypass denied. Neither
-candidate is yet proven for the selected shared k3s installation.
+[Admission journaling](admission-design.md) now has an implemented settlement
+primitive and a disposable native-controller proof. A validating webhook commits
+intent before allow and attaches a unique audit annotation. A trusted API-server
+RequestResponse ResponseComplete event settles the exact returned object UID.
+Missing or ambiguous completion stays pending or quarantined. No release API is
+implemented by this primitive.
 
-The implementation must not replace these requirements with controller username
-exemptions or release after suspension and an empty list. Both leave accepted
-controller work unaccounted for. The next runtime step depends on an enforceable
-settlement boundary for native controllers and a disposable proof of that boundary.
+The proof seals while a real ReplicaSet controller request is held before allow.
+An empty Pod list does not clear its intent. The Pod persists after seal, and a
+webhook container restart preserves the pending intent. Only the attributable audit
+completion settles it. An unreachable nonmatching mutator coexists with the
+CREATE; changing its selector is rejected by the inventory classifier.
+
+This establishes a local API settlement boundary. It does not prove termination,
+full controller quiescence, or admission enforcement against mutator drift. The
+selected shared installation still needs authenticated audit ingestion, complete
+controller authorization, immutable installation pins, and the lifecycle closure
+obligations below. No shared cluster was changed.
 
 The [decision trail](decisions.tsv) records the choices and evidence. Source
 inventory tooling is independent of this runtime design gate and can be rerun
@@ -116,11 +124,31 @@ an erroneous split-namespace rendering assumption. The regression test now check
 that both releases receive the same target namespace. There is no confirmed
 source PVC mismatch.
 
-Runtime implementation, disposable controller proof, clean-source runtime receipts,
-and shared-cluster activation remain open. The inventory and contract are a
-preparatory unit, not completion of `birbverify-bsmn`.
+The journal and mutator classifier are implemented prerequisites. Full Helm/Flux
+runtime integration, all-writer authorization, termination and restoration proof,
+and shared-cluster activation remain open. This does not complete
+`birbverify-bsmn`. The original design review predates the settlement experiment;
+a subsequent independent code review passed all 48 journal tests and replayed the
+real audit event without finding a false-settlement defect. Review used the same
+model family and did not independently rerun the cluster journey.
 
 The [clean-source inventory proof](inventory-proof.json) binds the reproducible
 receipt and 45 passing targeted tests to producer commit
 `eae60a84251c57cafafb9cc18f289d46acdab6bb`. It is an offline inspector proof,
 not a controller lifecycle or shared-staging acceptance receipt.
+
+## Reproduce native-controller settlement
+
+Run `scripts/verify-deployment-settlement` with Docker, kind, kubectl, OpenSSL,
+Python 3.13 and uv available. It builds the fixture image from this checkout,
+creates a uniquely named disposable kind cluster with an explicit kubeconfig,
+and removes only its own cluster and webhook container. It does not use the
+current shared kubeconfig context. Evidence remains under `.proof/bsmn/`.
+
+The receipt records source hashes, Git revision and dirty status, fixture image
+identity, parent and child UIDs, and the attributable audit ID. The local mailbox
+and audit file are trusted proof inputs, not a production ingestion service.
+Deployment and ReplicaSet setup is outside the fenced Pod CREATE experiment.
+The mutator classifier requires complete discovery and complete execution and
+cleanup write inventories from its caller. Snapshot comparison alone cannot
+prevent a later admission-configuration race.

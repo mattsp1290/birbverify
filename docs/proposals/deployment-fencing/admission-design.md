@@ -38,7 +38,22 @@ If admission allows CREATE before seal, its durable intent is necessarily in the
 
 A validating webhook has no post-persistence callback. AdmissionReview.uid is not assumed to equal an API audit identifier. An empty GET/list, timeout, elapsed quiet period, observed controller suspension, or observedGeneration does not establish that an allowed request cannot still persist. An ordinary watch can positively observe a matching persisted effect, but cannot prove an unobserved allowed request definitively failed. An observed fingerprint without unique provenance can also match a different retry.
 
-For successful automated settlement, require an explicitly designed correlation mechanism and complete trusted API completion evidence. One possible integration is a controlled mutating admission marker plus authoritative response-completion capture. It must account for retries, rejected writes, dry-run, generated names, create/delete before observation, and replay after restart. Do not claim that Kubernetes audit logs provide this mapping without verifying the deployed audit policy and correlation path. Until that integration exists, any controller admission without positive attributable completion remains quarantined. This is safe but can prevent routine release.
+The implemented `deployment_journal.Journal` uses a unique validating-webhook
+`auditAnnotations` key per AdmissionReview UID. The API server prefixes the key
+with the webhook name. A private trusted observer supplies the corresponding
+RequestResponse ResponseComplete event. The journal checks epoch, writer,
+operation, resource, namespace, exact admitted body, and returned UID/resource
+version. Generated-name CREATE requests require submitted generateName
+provenance because their audit objectRef can omit name. Audit IDs and admission
+UIDs are distinct. Conflicting audit reuse or unknown correlated intent
+quarantines the epoch. Non-success and timeout responses never prove no effect.
+
+The disposable proof demonstrates native ReplicaSet Pod CREATE across seal and
+process restart. The primitive supports core Pod and ConfigMap writes only and
+has no release method. It does not implement the whole installation envelope or
+controller authorization described above. DELETE settlement explicitly does not
+prove container termination. Production use requires an authenticated,
+installation-owned audit path and a verified deployed audit policy.
 
 ## Closure obligations.
 
@@ -52,4 +67,4 @@ Obtain the accepted source SHA and exact rendered account/auth manifests, hook b
 
 ## Feasibility judgment.
 
-An admission-intent ledger plus conservative unknown handling is feasible as a bounded new component. Production controller-backed release is not justified by the current API interface or unproven controller settlement. The smallest honest implementation can establish the versioned envelope, journal, seal race tests, and fail-closed unsupported outcome. It cannot honestly mark the full account/auth acceptance criterion complete. The Model the Domain principle shaped the explicit epoch and intent settlement union instead of extending the existing Pod-specific close conditionals.
+An admission-intent ledger plus conservative unknown handling is feasible as a bounded new component. Production controller-backed release remains unjustified until the full owner graph, authorization, and termination/restoration obligations are implemented. The smallest honest implementation can establish the versioned envelope, journal, seal race tests, and fail-closed unsupported outcome. It cannot honestly mark the full account/auth acceptance criterion complete. The Model the Domain principle shaped the explicit epoch and intent settlement union instead of extending the existing Pod-specific close conditionals.
