@@ -15,8 +15,7 @@ nodes:
         audit-policy-file: /etc/birbverify/audit-policy.yaml
         audit-webhook-config-file: /etc/birbverify/audit.kubeconfig
         audit-webhook-version: audit.k8s.io/v1
-        audit-webhook-mode: batch
-        audit-webhook-batch-max-wait: 1s
+        audit-webhook-mode: blocking
       extraVolumes:
       - name: proof-config
         hostPath: /etc/birbverify

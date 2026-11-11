@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: proof-target
+  name: terminal-hook
+  annotations:
+    helm.sh/hook: post-install
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  initContainers:
+  - name: prepare
+    image: docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+    command: ["/bin/true"]
+  containers:
+  - name: finish
+    image: docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+    command: ["/bin/true"]

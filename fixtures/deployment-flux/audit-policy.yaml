@@ -2,7 +2,9 @@ apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
 - level: RequestResponse
+  users: [proof-release-client]
   namespaces: [proof-target]
-  resources: [{group: "", resources: [configmaps]}]
+  verbs: [create, update]
+  resources: [{group: "", resources: [configmaps, secrets]}]
   omitStages: [RequestReceived, ResponseStarted]
 - level: None
