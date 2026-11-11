@@ -7,6 +7,7 @@ from pydantic import Field, TypeAdapter, model_validator
 
 from birbverify.contract import Id, Record, RequestId, Sha, digest
 from birbverify.deployment_activity import account_activity_state
+from birbverify.deployment_helm import HelmReleasePin, prepare_helm_request, reserve_helm_slot
 from birbverify.deployment_journal import Journal, _encode, _identifier
 from birbverify.kubernetes_contract import Name
 
@@ -77,6 +78,9 @@ class OwnershipPolicy(Record):
     closure_client_sha256: Sha
     audit_client_sha256: Sha
     terminal_observer: TerminalObserverPin | None = None
+    helm_releases: tuple[HelmReleasePin, ...] | None = Field(
+        default=None, min_length=1, max_length=2
+    )
     rules: tuple[CreateSlot, ...] = Field(min_length=1, max_length=512)
 
     @model_validator(mode="after")
@@ -85,8 +89,12 @@ class OwnershipPolicy(Record):
         if len(set(pins)) != len(pins):
             raise ValueError("each caller needs a distinct certificate")
         by_id = {rule.slot: rule.kind for rule in self.rules}
-        if len(by_id) != len(self.rules):
-            raise ValueError("duplicate ownership slot")
+        slots = [rule.slot for rule in self.rules]
+        slots.extend(
+            pin.slot(phase) for pin in self.helm_releases or () for phase in ("create", "status")
+        )
+        if len(slots) > 512 or len(set(slots)) != len(slots):
+            raise ValueError("duplicate ownership slot or slot capacity exceeded")
         for rule in self.rules:
             if rule.parent_slot and by_id.get(rule.parent_slot) not in _PARENTS.get(rule.kind, {}):
                 raise ValueError("unsupported controller edge")
@@ -215,6 +223,11 @@ class OwnershipJournal(Journal):
         )
         self.require_audit_source(policy.cluster_uid, policy.audit_client_sha256)
 
+    def _prepare_admission(self, request):
+        if request.get("kind", {}).get("kind") == "Secret":
+            return prepare_helm_request(request, self.namespace, self.policy.helm_releases or ())
+        return super()._prepare_admission(request)
+
     def _validate_admission(self, request):
         if (
             not isinstance(request, dict)
@@ -259,6 +272,9 @@ class OwnershipJournal(Journal):
 
     def _reserve_intent(self, db, request):
         obj = request["object"]
+        if obj["kind"] == "Secret":
+            reserve_helm_slot(db, request)
+            return
         metadata = obj["metadata"]
         principal = digest(request["userInfo"])
         candidates = [

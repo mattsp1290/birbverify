@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from birbverify.contract import digest
+from birbverify.deployment_helm import secret_view
 
 _SERVER_METADATA = {"uid", "resourceVersion", "generation", "creationTimestamp", "managedFields"}
 MAX_INTENTS = 2048
@@ -210,6 +211,10 @@ class Journal:
             if preconditions.get("uid") != metadata["uid"]:
                 raise ValueError("delete requires exact UID precondition")
 
+    def _prepare_admission(self, request):
+        self._validate_admission(request)
+        return request
+
     def _reserve_intent(self, db, request):
         """The proof journal relies on its caller for authorization."""
 
@@ -222,7 +227,7 @@ class Journal:
             return {"uid": "", "allowed": False, "status": {"message": "invalid request"}}
         response = {"uid": request.get("uid", ""), "allowed": False}
         try:
-            self._validate_admission(request)
+            request = self._prepare_admission(request)
         except (ValueError, TypeError, AttributeError) as error:
             return response | {"status": {"message": str(error)}}
         with self._transaction() as db:
@@ -298,7 +303,14 @@ class Journal:
         if _VERBS.get(event.get("verb")) != request["operation"]:
             raise ValueError("audit verb mismatch")
         user = event.get("impersonatedUser", event.get("user"))
-        if user != request["userInfo"] or not event.get("user", {}).get("username"):
+        helm_storage = request["kind"]["kind"] == "Secret"
+        if helm_storage:
+            if "impersonatedUser" in event or event["verb"] != request["operation"].lower():
+                raise ValueError("Helm audit identity or operation mismatch")
+            writer_matches = digest(user) == request["principal_sha256"]
+        else:
+            writer_matches = user == request["userInfo"]
+        if not writer_matches or not event.get("user", {}).get("username"):
             raise ValueError("audit writer mismatch")
         ref = event.get("objectRef", {})
         expected = {
@@ -335,6 +347,14 @@ class Journal:
         response = event.get("responseObject")
         if not isinstance(response, dict):
             raise ValueError("missing API response object")
+        if helm_storage:
+            response = secret_view(response)
+            if (
+                request["operation"] == "UPDATE"
+                and response["metadata"].get("resourceVersion")
+                == request["oldObject"]["metadata"]["resourceVersion"]
+            ):
+                raise ValueError("Helm storage resource version did not advance")
         obj = request["oldObject" if request["operation"] == "DELETE" else "object"]
         if request["operation"] == "DELETE":
             uid = obj["metadata"]["uid"]

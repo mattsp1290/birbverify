@@ -1,0 +1,18 @@
+# Pin a first Helm release in the deployment journal
+
+The optional `helm_releases` field in the ownership policy enrolls up to two named Helm 3 releases in the target namespace. Each entry authorizes one pending revision-1 Secret CREATE and one status UPDATE. The validating webhook must cover both verbs for core/v1 Secrets. Configure the authenticated API audit receiver for RequestResponse delivery for this exact writer and namespace. The API server sends the release contents to that receiver. Use a direct, protected delivery path and disable request-body logging, audit file copies, and persistent webhook spooling for these Secret events.
+
+## Prepare the pins
+
+1. Check out the exact approved source commit. Verify the chart artifact, release name, namespace, values, Helm version and post-renderers used by the installer.
+2. Independently render the release JSON using those inputs. Account for the installer's exact final post-rendered manifest, including serialization. Compute `birbverify.deployment_helm.release_content_sha256(release)` in memory. This hashes every field of the release except four changing fields in `info`: status, description, first deployment time and last deployment time. The hash covers the entire chart, config, manifest, hooks and notes. Hooks with runtime mutations require a different reviewed contract.
+3. Pin the 40-character Git commit as `source_revision`, this digest as `content_sha256`, the approved release as `release_name` and the canonical digest of the full authenticated Kubernetes UserInfo as `principal_sha256`. The release wire format omits the Git revision. The installer attests to the relationship between that commit and the independently rendered digest. Do not derive a policy from an incoming Secret.
+4. To allow a known failed-install status write, pin `failed_description_sha256` to the SHA-256 of the exact UTF-8 Helm failure description. Omit it for installations that should retain every unfamiliar failure.
+
+The journal accepts only the Helm v3 gzip/base64 envelope, one `release` field, the named revision-1 Secret and matching Helm ownership/status labels. Encoded release data is limited to 1,400,000 characters and decompressed JSON to 4 MiB, 65,536 values and 64 nested containers. Existing service request limits also apply. First and last deployment timestamps must agree. The status write preserves the original timestamp and immutable release content. Both storage timestamps must follow the initial deployment and the terminal storage timestamp must follow the CREATE timestamp. The default pending and deployed descriptions are exact matches.
+
+## Read completion and closure
+
+The CREATE reserves `helm-<release>-create`. The status UPDATE reserves `helm-<release>-status` only after an authenticated, successful API completion settles the CREATE. Configure blocking audit delivery when the installer immediately updates its release. A delayed completion can cause that request to be denied. The journal checks the admitted old Secret's UID, resourceVersion and wire digest against the CREATE receipt. The terminal completion must carry the same UID, a new resourceVersion and the exact approved Secret payload and labels. Kubernetes supplies the current object identity during admission. Helm's client sends an unconditional update.
+
+Journal rows contain release identifiers, timestamps, hashes, and audit receipts. Secret data, user values, decoded release JSON and notes stay in memory. Retain the target on missing evidence, an unknown status, a changed release or a recreated Secret. Closure continues to report outstanding cleanup and restoration obligations after both writes settle.
