@@ -1,6 +1,6 @@
 # Fixture execution boundaries
 
-Birbforge will call Birbverify activities from its own Temporal workflow.
+Birbforge will call Verify activities from its own Temporal workflow.
 `FixtureWorkflow` exists only to exercise that activity. It neither admits
 factory actions nor implements an environment queue.
 

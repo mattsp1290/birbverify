@@ -1,6 +1,6 @@
 # Contextless fixture closure
 
-Birbverify can permanently close a dispatched request even when its worker's local
+Verify can permanently close a dispatched request even when its worker's local
 context is missing. A closure receipt records execution stop and environment
 release. It supplies no application verdict and never makes a candidate eligible.
 

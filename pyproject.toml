@@ -5,6 +5,10 @@ description = "Bounded verification worker contract and disposable fixture proof
 requires-python = ">=3.13,<3.14"
 dependencies = ["pydantic==2.12.5", "temporalio==1.35.0", "ag-ui-protocol==1.0.0"]
 
+[project.urls]
+Repository = "https://github.com/mattsp1290/verify"
+Issues = "https://github.com/mattsp1290/verify/issues"
+
 [dependency-groups]
 dev = ["pytest==9.2.0", "pytest-asyncio==1.3.0", "pyyaml==6.0.3", "ruff==0.17.4"]
 

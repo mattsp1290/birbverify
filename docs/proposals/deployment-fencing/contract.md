@@ -37,7 +37,7 @@ installation digest/incarnation, target binding, immutable image-role map,
 chart/render digests, and a timezone-aware deadline.
 
 Birbforge owns admission, policy, durable FIFO, retry scheduling, and independent
-closure after worker loss. Birbverify owns credentialed activities, write fencing,
+closure after worker loss. Verify owns credentialed activities, write fencing,
 settlement, and lifecycle evidence. Beans owns authored work. No component adds a
 second scheduler or publisher.
 

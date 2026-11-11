@@ -1,7 +1,7 @@
 # Verification contract v1
 
-Birbverify owns `birbverify.v1`. The published wire schemas are in
-[`contracts/v1`](../contracts/v1). Consumers pin a Birbverify Git revision and
+Verify owns `birbverify.v1`. The published wire schemas are in
+[`contracts/v1`](../contracts/v1). Consumers pin a Verify Git revision and
 these files together. This version is a local fixture contract. It does not
 change Birbcrew or Birbforge's published contracts.
 

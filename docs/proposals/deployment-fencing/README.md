@@ -66,7 +66,7 @@ without cluster access.
 
 ## Reproduce the inventory
 
-Run from the Birbverify repository root with Python 3.13, uv, Git, curl and tar.
+Run from the Verify repository root with Python 3.13, uv, Git, curl and tar.
 The script reads committed Git objects and never edits the supplied checkout.
 The commands below use the accepted Darwin ARM64 Helm binary. The recipe below is specific to Darwin ARM64. Other platforms require their own
 reviewed Helm binary digest.

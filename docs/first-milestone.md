@@ -1,4 +1,4 @@
-# First milestone for Birbverify
+# First milestone for Verify
 
 Status: owner-launched local fixture implementation and evidence now exist.
 The original scope and required journeys below remain the acceptance brief.
