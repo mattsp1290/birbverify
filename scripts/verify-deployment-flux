@@ -7,12 +7,13 @@ import hashlib
 import json
 import os
 import shutil
+import sqlite3
 import ssl
 import subprocess
 import sys
 import tempfile
 import time
-from contextlib import ExitStack
+from contextlib import ExitStack, closing
 from functools import partial
 from pathlib import Path
 
@@ -21,6 +22,7 @@ import yaml
 from birbverify.contract import digest
 from birbverify.deployment_bootstrap import provision
 from birbverify.deployment_guard import inventory, manifests, verify_initial_installation
+from birbverify.deployment_helm import release_content_sha256
 from birbverify.deployment_ownership import object_shape_sha256
 from birbverify.kubernetes_api import KubernetesAPI
 
@@ -86,7 +88,7 @@ def write(path, obj):
     path.write_text(json.dumps(obj, indent=2) + "\n")
 
 
-def setup_cluster(root, cluster):
+def setup_cluster(root, cluster, audit_policy=FIXTURE / "audit-policy.yaml"):
     bootstrap = root / "bootstrap"
     bootstrap.mkdir()
     audit, admission = root / "audit", root / "admission"
@@ -111,7 +113,7 @@ def setup_cluster(root, cluster):
         },
     )
     shutil.copyfile(FIXTURE / "admission.yaml", bootstrap / "admission.yaml")
-    shutil.copyfile(FIXTURE / "audit-policy.yaml", bootstrap / "audit-policy.yaml")
+    shutil.copyfile(audit_policy, bootstrap / "audit-policy.yaml")
     (root / "kind.yaml").write_text(
         (FIXTURE / "kind.yaml").read_text().replace("PROOF_CONFIG", str(bootstrap))
     )
@@ -176,8 +178,9 @@ def release_identity(root, kubectl):
     path = root / "release.kubeconfig"
     write(path, config(cluster["server"], cluster["certificate-authority-data"], identity))
     user = json.loads(run("kubectl", "--kubeconfig", path, "auth", "whoami", "-o", "json"))
+    in_cluster = root / "flux.kubeconfig"
     write(
-        path,
+        in_cluster,
         config("https://kubernetes.default.svc", cluster["certificate-authority-data"], identity),
     )
     kubectl(
@@ -187,31 +190,67 @@ def release_identity(root, kubectl):
         "secret",
         "generic",
         "release-client",
-        "--from-file=value.yaml=" + str(path),
+        "--from-file=value.yaml=" + str(in_cluster),
     )
     return user["status"]["userInfo"]
 
 
 def install_policy(root, kubectl):
-    for namespace in ("proof-target", "proof-control", "proof-storage"):
+    for namespace in ("proof-target", "proof-control"):
         kubectl("create", "namespace", namespace)
     kubectl("apply", "-f", FIXTURE / "access.yaml")
     user = release_identity(root, kubectl)
     namespace = "proof-target"
     cluster_uid = kubectl("get", "ns/kube-system", "-o", "jsonpath={.metadata.uid}")
     uid = kubectl("get", "ns/" + namespace, "-o", "jsonpath={.metadata.uid}")
-    obj = yaml.safe_load(run("helm", "template", "fence-proof", FIXTURE / "chart", "-n", namespace))
-    obj["metadata"].update(
-        labels={
-            "app.kubernetes.io/managed-by": "Helm",
-            "helm.toolkit.fluxcd.io/name": "fence-proof",
-            "helm.toolkit.fluxcd.io/namespace": "proof-control",
-        },
-        annotations={
-            "meta.helm.sh/release-name": "fence-proof",
-            "meta.helm.sh/release-namespace": namespace,
-        },
+    # The fixture has a single Helm 3 template and no chart dependencies or values.yaml.
+    # Reconstruct its storage model from the reviewed sources without consulting Kubernetes.
+    chart = FIXTURE / "chart"
+    hr = next(
+        doc
+        for doc in yaml.safe_load_all((FIXTURE / "release.yaml").read_text())
+        if doc["kind"] == "HelmRelease"
     )
+    spec, name = hr["spec"], hr["spec"]["releaseName"]
+    rendered = run(
+        "helm",
+        "template",
+        name,
+        chart,
+        "--namespace",
+        namespace,
+        "--values",
+        "-",
+        data=json.dumps(spec["values"]),
+    )
+    obj = yaml.safe_load(rendered)
+    obj["metadata"]["labels"] = {
+        "helm.toolkit.fluxcd.io/name": hr["metadata"]["name"],
+        "helm.toolkit.fluxcd.io/namespace": hr["metadata"]["namespace"],
+    }
+    template = "templates/marker.yaml"
+    release = {
+        "name": name,
+        "namespace": namespace,
+        "version": 1,
+        "info": {"deleted": ""},
+        "config": spec["values"],
+        "chart": {
+            "metadata": yaml.safe_load((chart / "Chart.yaml").read_text()),
+            "templates": [{"name": template, "data": encoded(chart / template)}],
+            "lock": None,
+            "values": None,
+            "schema": None,
+            "files": None,
+        },
+        # Flux's OriginLabels post-renderer serializes this single resource in sorted key order.
+        "manifest": yaml.safe_dump(obj, sort_keys=True),
+    }
+    obj["metadata"]["labels"]["app.kubernetes.io/managed-by"] = "Helm"
+    obj["metadata"]["annotations"] = {
+        "meta.helm.sh/release-name": "fence-proof",
+        "meta.helm.sh/release-namespace": namespace,
+    }
     audit, admission = root / "audit", root / "admission"
     policy = dict(
         schema_version="birbverify.deployment.ownership.v1",
@@ -222,6 +261,14 @@ def install_policy(root, kubectl):
         audit_client_sha256=pin(audit / "apiserver.crt"),
         admission_client_sha256=pin(admission / "apiserver.crt"),
         closure_client_sha256=pin(admission / "unassigned.crt"),
+        helm_releases=[
+            dict(
+                release_name="fence-proof",
+                source_revision=run("git", "-C", REPO, "rev-parse", "HEAD"),
+                principal_sha256=digest(user),
+                content_sha256=release_content_sha256(release),
+            )
+        ],
         rules=[
             dict(
                 slot="release-marker",
@@ -339,7 +386,7 @@ def start_services(root, policy, request_sha, container):
     return server
 
 
-def guard_installation(root, cluster, kubectl, server, namespace):
+def guard_installation(root, cluster, kubectl, server, namespace, *, rules=None):
     admission = root / "admission"
     webhook = (
         (FIXTURE / "webhook.yaml")
@@ -347,6 +394,10 @@ def guard_installation(root, cluster, kubectl, server, namespace):
         .replace("ADMISSION_SERVER", server)
         .replace("CA_DATA", encoded(admission / "ca.crt"))
     )
+    if rules is not None:
+        config = yaml.safe_load(webhook)
+        config["webhooks"][0]["rules"] = rules
+        webhook = json.dumps(config)
     kubectl("create", "-f", "-", data=webhook)
     api = KubernetesAPI(root / "kubeconfig", "kind-" + cluster)
     pins = inventory(api, namespace, WEBHOOK)
@@ -413,32 +464,33 @@ def install_chart(chart_dir, kubectl, container):
     return observed_release, digest(manifest.encode())
 
 
-def verify_closure(admission, server, policy, request_sha, persisted):
+def post_closure(admission, server, route, body):
     port = run("docker", "port", server, "8443/tcp").split(":")[-1]
-
-    def post(route, body):
-        return json.loads(
-            run(
-                "curl",
-                "-fsS",
-                "--noproxy",
-                "*",
-                "--cacert",
-                admission / "ca.crt",
-                "--cert",
-                admission / "unassigned.crt",
-                "--key",
-                admission / "unassigned.key",
-                "--resolve",
-                f"{server}:{port}:127.0.0.1",
-                "-H",
-                "Content-Type: application/json",
-                "--data-binary",
-                json.dumps(body),
-                f"https://{server}:{port}/v1/{route}",
-            )
+    return json.loads(
+        run(
+            "curl",
+            "-fsS",
+            "--noproxy",
+            "*",
+            "--cacert",
+            admission / "ca.crt",
+            "--cert",
+            admission / "unassigned.crt",
+            "--key",
+            admission / "unassigned.key",
+            "--resolve",
+            f"{server}:{port}:127.0.0.1",
+            "-H",
+            "Content-Type: application/json",
+            "--data-binary",
+            json.dumps(body),
+            f"https://{server}:{port}/v1/{route}",
         )
+    )
 
+
+def verify_closure(admission, server, policy, request_sha, expected_uids):
+    post = partial(post_closure, admission, server)
     request = {"request_id": "flux-proof", "request_sha256": request_sha}
     owner = post("observe", request)
     assert owner["state"] == "active" and owner["installation_sha256"] == digest(policy)
@@ -447,17 +499,20 @@ def verify_closure(admission, server, policy, request_sha, persisted):
     command = invocation | {"reason": "completed"}
     for _ in range(50):
         progress = post("close", command)
-        if len(progress["effects"]) == 1 and progress["effects"][0]["state"] == "settled":
+        if len(progress["effects"]) == len(expected_uids) and all(
+            effect["state"] == "settled" for effect in progress["effects"]
+        ):
             break
         time.sleep(0.2)
     else:
-        raise AssertionError("Authenticated completion did not settle the Helm CREATE")
-    (effect,) = progress["effects"]
-    assert effect["slot"] == "release-marker" and effect["object_uid"] == persisted
-    assert effect["audit_id"] and effect["event_sha256"]
+        raise AssertionError(
+            "Authenticated completion did not settle all Helm writes: " + str(progress)
+        )
+    assert {effect["slot"]: effect["object_uid"] for effect in progress["effects"]} == expected_uids
+    assert len({effect["audit_id"] for effect in progress["effects"] if effect["audit_id"]}) == 3
+    assert all(effect["event_sha256"] for effect in progress["effects"])
     assert progress["state"] == "sealed" and progress["release_authorized"] is False
     run("docker", "restart", server)
-    port = run("docker", "port", server, "8443/tcp").split(":")[-1]
     for _ in range(50):
         try:
             replay = post("close", command)
@@ -485,12 +540,56 @@ def exercise(root, cluster, stack, image):
     persisted = kubectl(
         "-n", namespace, "get", "cm/release-marker", "-o", "jsonpath={.metadata.uid}"
     )
-    progress = verify_closure(root / "admission", server, policy, request_sha, persisted)
+    secret = "secret/sh.helm.release.v1.fence-proof.v1"
+    secret_uid = kubectl("-n", namespace, "get", secret, "-o", "jsonpath={.metadata.uid}")
+    assert (
+        kubectl("-n", namespace, "get", secret, "-o", "jsonpath={.metadata.labels.status}")
+        == "deployed"
+    )
+    denied = subprocess.run(
+        [
+            "kubectl",
+            "--kubeconfig",
+            str(root / "release.kubeconfig"),
+            "-n",
+            namespace,
+            "create",
+            "secret",
+            "generic",
+            "unapproved",
+            "--from-literal=sample=fixture",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    assert denied.returncode and f'admission webhook "{WEBHOOK}" denied' in denied.stderr
+    expected_uids = {
+        "release-marker": persisted,
+        "helm-fence-proof-create": secret_uid,
+        "helm-fence-proof-status": secret_uid,
+    }
+    progress = verify_closure(root / "admission", server, policy, request_sha, expected_uids)
+    stored_payload = kubectl("-n", namespace, "get", secret, "-o", "jsonpath={.data.release}")
+    db = root / "state/journal.sqlite"
+    with closing(sqlite3.connect(db.as_uri() + "?mode=ro", uri=True)) as con:
+        intents = con.execute("SELECT data FROM intents").fetchall()
+        assert len(intents) == len(expected_uids)
+        for (body,) in intents:
+            req = json.loads(body)["request"]
+            if req["kind"]["kind"] == "Secret":
+                for obj in [req["object"], req.get("oldObject")]:
+                    assert not obj or "release" not in obj.get("data", {})
+    journal = db.read_bytes()
+    assert stored_payload and stored_payload.encode() not in journal
+    assert b"finite-storage-fixture" not in journal
     chart = chart_dir / "fence-proof-0.1.0.tgz"
     write(
         root / "receipt.json",
         {
-            "scope": "Flux Helm install of one owned ConfigMap",
+            "scope": "Flux Helm release Secret CREATE/UPDATE and chart ConfigMap in one namespace",
+            "unlisted_secret_denied": True,
+            "release_payload_absent_from_journal": True,
             "source_revision": run("git", "-C", REPO, "rev-parse", "HEAD"),
             "source_dirty": bool(run("git", "-C", REPO, "status", "--porcelain")),
             "image_id": image,
@@ -509,13 +608,40 @@ def exercise(root, cluster, stack, image):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args()
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--terminal-hook", action="store_true", help="observe one completed Helm hook Pod"
+    )
+    mode.add_argument(
+        "--accepted-data",
+        type=Path,
+        metavar="BIRBPARTY_REPO",
+        help="install the locked data chart with the reviewed Helm v3.22.1 client",
+    )
+    args = parser.parse_args()
+    audit_policy = FIXTURE / "audit-policy.yaml"
+    run_proof = exercise
+    prefix = "bv-flux-"
+    if args.accepted_data:
+        import deployment_data
+
+        prefix = "bv-data-"
+        audit_policy = REPO / "fixtures/accepted-data/audit-policy.yaml"
+        run_proof = partial(
+            deployment_data.exercise, candidate=args.accepted_data, fixture=sys.modules[__name__]
+        )
+    elif args.terminal_hook:
+        import deployment_terminal
+
+        prefix = "bv-hook-"
+        audit_policy = deployment_terminal.FIXTURE / "audit-policy.yaml"
+        run_proof = partial(deployment_terminal.exercise, fixture=sys.modules[__name__])
     os.umask(0o077)
     base = REPO / ".proof" / "deployment"
     base.mkdir(parents=True, exist_ok=True)
-    root = Path(tempfile.mkdtemp(prefix="bv-flux-", dir=base))
+    root = Path(tempfile.mkdtemp(prefix=prefix, dir=base))
     cluster = root.name.replace("_", "-")
-    print("Flux proof directory", root, flush=True)
+    print("Proof directory", root, flush=True)
     run(
         "docker",
         "build",
@@ -538,8 +664,8 @@ def main():
             root / "kubeconfig",
             check=False,
         )
-        setup_cluster(root, cluster)
-        exercise(root, cluster, stack, (root / "image-id").read_text().strip())
+        setup_cluster(root, cluster, audit_policy)
+        run_proof(root, cluster, stack, (root / "image-id").read_text().strip())
     print(root / "receipt.json")
 
 

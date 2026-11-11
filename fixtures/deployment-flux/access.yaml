@@ -14,14 +14,14 @@ subjects: [{kind: User, name: proof-release-client, apiGroup: rbac.authorization
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
-metadata: {namespace: proof-storage, name: release-storage}
+metadata: {namespace: proof-target, name: release-storage}
 rules:
 - apiGroups: [""]
   resources: [secrets]
-  verbs: [get, list, watch, create, update, delete]
+  verbs: [get, list, watch, create, update]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
-metadata: {namespace: proof-storage, name: release-storage}
+metadata: {namespace: proof-target, name: release-storage}
 roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: release-storage}
 subjects: [{kind: User, name: proof-release-client, apiGroup: rbac.authorization.k8s.io}]

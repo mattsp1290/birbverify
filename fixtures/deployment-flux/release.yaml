@@ -16,7 +16,9 @@ spec:
   interval: 1m
   releaseName: fence-proof
   targetNamespace: proof-target
-  storageNamespace: proof-storage
+  storageNamespace: proof-target
+  values:
+    storageProbe: finite-storage-fixture
   kubeConfig:
     secretRef:
       name: release-client

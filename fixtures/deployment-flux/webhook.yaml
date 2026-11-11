@@ -16,6 +16,6 @@ webhooks:
   rules:
   - apiGroups: [""]
     apiVersions: [v1]
-    resources: [configmaps]
+    resources: [configmaps, secrets]
     operations: ["*"]
     scope: Namespaced

@@ -37,7 +37,7 @@ The object digest includes the final object, including its spec, labels, annotat
 
 Each slot admits at most one distinct review. Concurrent requests, client retries with a different review UID and controller recreation cannot consume it again. An identical retry with the original review UID can recover the admission decision while the epoch is active. Authorization, reservation and recording the pending intent share the seal's SQLite transaction boundary. An ambiguous completion retains the slot.
 
-The implementation accepts named CREATEs for ConfigMaps, Deployments, StatefulSets, Services, Endpoints, NetworkPolicies, ServiceAccounts, PVCs, suspended CronJobs and Pods. It supports reviewed owned children on the Deployment/ReplicaSet/Pod, StatefulSet/Pod, StatefulSet/ControllerRevision, StatefulSet/PVC and Service/EndpointSlice edges. This covers the CREATE reservation of a named hook Pod and its init container specification. Controller health/status, scheduler binding, generated release Secrets, source and HelmRelease updates, hook deletion, Jobs, retained-data restoration and the full release write set still need authorization. A generated name with multiple indistinguishable candidate slots receives a denial.
+The implementation accepts named CREATEs for ConfigMaps, Deployments, StatefulSets, Services, Endpoints, NetworkPolicies, ServiceAccounts, PVCs, suspended CronJobs and Pods. It supports reviewed owned children on the Deployment/ReplicaSet/Pod, StatefulSet/Pod, StatefulSet/ControllerRevision, StatefulSet/PVC and Service/EndpointSlice edges. This covers the CREATE reservation of a named hook Pod and its init container specification. The optional Helm policy covers the same-namespace revision-1 release Secret CREATE and its status UPDATE. See [Pin a first Helm release](deployment-helm.md). Controller health/status, scheduler binding, source and HelmRelease updates, hook deletion, Jobs, retained-data restoration and the full release write set still need authorization. A generated name with multiple indistinguishable candidate slots receives a denial.
 
 ## Seal and recover
 
@@ -62,6 +62,8 @@ python -m birbverify.deployment_ownership_observe \
 ```
 
 The observer resolves the Pod from a settled owned CREATE. It checks the cluster, namespace and Ready node identities and requires a terminal Pod phase. It compares every declared regular and init container name and image, its terminated runtime container ID, exit code, start and finish times. Empty or missing status, an absent or replaced Pod, and an unavailable node retain the obligation. Only the first successful observation is saved. The next closure call includes its SHA-256 digest, including after restart or later Pod deletion. The status excludes container log text and termination messages. This discharges the per-Pod API status check. The installation still needs an enforced exclusive kubelet/status writer, trustworthy node state, and restored reconciliation and storage to authorize release.
+
+Run `scripts/verify-deployment-flux --terminal-hook` on Linux to exercise the observer. Helm creates one post-install hook Pod with an init container and a regular container. The fixture seals the epoch while terminal evidence is missing, runs the packaged observer with read-only access, and compares its receipt with the next authenticated closure response. The target fence covers the Pod CREATE. Helm storage lives in the control namespace. Scheduling, status writes and cleanup remain outside this proof.
 
 ## Recover an account result
 
