@@ -1,0 +1,434 @@
+{
+  "scope": "Disposable Linux ARM64. Cluster, namespace, Pod and audit identifiers are from these isolated fixtures. No shared deployment release.",
+  "flux": {
+    "source_revision": "bf647f1f852f343780cbcc25884d223735d71e5a",
+    "chart_sha256": "67f6ec1573d753ab41c06c1917c29c72e420b7d0510a42236809cf001da83ec0",
+    "flux_images": {
+      "ghcr.io/fluxcd/source-controller:v1.6.2": "11c8e14df885eff86586533d9941293ec8a1e9fff71bacf119edc79fdf3c63e3",
+      "ghcr.io/fluxcd/helm-controller:v1.3.0": "db55d9d9f9b5106acd8c21da6916b8e285fcfc5572f214361ececd1a8571a4f0"
+    },
+    "flux_manifest_sha256": "8bf3de711a1f6226e550163470ea0115afed2e126b368d35ddd28e5bf80134ad",
+    "image_id": "sha256:b28596c285541f409195cf979182598386a36b95a28787f46a0307c4505ba408",
+    "node": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+    "scope": "Flux Helm release Secret CREATE/UPDATE and chart ConfigMap in one namespace",
+    "release_payload_absent_from_journal": true,
+    "unlisted_secret_denied": true,
+    "receipt_sha256": "59f9f3cca33aeb52dc1a7a60fdf7732993855431cb17f1b61795e4a60aa98fce",
+    "closure": {
+      "request_id": "flux-proof",
+      "request_sha256": "0ee63755c10f1182e93fda92d0fc4808cb315c463eb30c2b84bedb05b55ff16b",
+      "epoch": "7401fa64-e675-412d-a632-96491c6fd5fb",
+      "reason": "completed",
+      "schema_version": "birbverify.deployment.closure.progress.v1",
+      "installation_sha256": "ec09c562cb0a0ca9562f2186977e164d665f0b7639d9bca9cb57edac7d617f8b",
+      "cluster_uid": "29c45974-5956-4f5d-b328-c30f58ab9cf6",
+      "namespace_uid": "2a771236-c64f-4870-bf1c-19b85fbdb940",
+      "state": "sealed",
+      "effects": [
+        {
+          "slot": "helm-fence-proof-create",
+          "state": "settled",
+          "object_uid": "b903fe04-1923-4498-b470-6c4991a7647a",
+          "audit_id": "5ac84c3e-a347-40c0-b2a7-4142e9fccd27",
+          "event_sha256": "02150237c1e86c8f9233243bad80c6d9d3a3eaa5d0e0b7514e9409ea1794950b",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "helm-fence-proof-status",
+          "state": "settled",
+          "object_uid": "b903fe04-1923-4498-b470-6c4991a7647a",
+          "audit_id": "ab7ff54d-5346-4a9b-b323-b5bf5121a41c",
+          "event_sha256": "2e5813be3f547b11c231ced23586cd5b6041ea0a2255a88f089e35d1923da797",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "release-marker",
+          "state": "settled",
+          "object_uid": "99db27c7-7293-43d7-b55b-b68766fd61c2",
+          "audit_id": "ce9a1c29-9b45-4413-9d11-2d7bd203ff64",
+          "event_sha256": "9cd697db3e9367ea5d836585920287dccf9f4ac3725191db35dadc4dce10a4a3",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        }
+      ],
+      "account_activity_state": "absent",
+      "installation_obligations": [
+        "writer_and_admission_integrity",
+        "reconciliation_quiescence",
+        "baseline_restoration"
+      ],
+      "release_authorized": false
+    }
+  },
+  "hook": {
+    "source_revision": "bf647f1f852f343780cbcc25884d223735d71e5a",
+    "scope": "One Helm hook Pod CREATE. Helm storage, scheduling, status writes and cleanup are outside this fixture.",
+    "verifier_image": "sha256:b28596c285541f409195cf979182598386a36b95a28787f46a0307c4505ba408",
+    "helm_hook": {
+      "release": "terminal-hook",
+      "namespace": "proof-control",
+      "phase": "Succeeded",
+      "events": [
+        "post-install"
+      ]
+    },
+    "kind_image": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+    "installation_sha256": "d96fb124ada35137f044aad564803b849931ec8aa19e43225baa011c373a8194",
+    "terminal": {
+      "containers": {
+        "finish": {
+          "container_id": "containerd://ed31e4cfb9f1aeb9d221158eba21ed8bb2a8175631ed95d3b6835d3f64c9a82b",
+          "exit_code": 0,
+          "finished_at": "2026-11-11T00:11:16+00:00",
+          "image": "docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e",
+          "started_at": "2026-11-11T00:11:16+00:00"
+        }
+      },
+      "initContainers": {
+        "prepare": {
+          "container_id": "containerd://b0b903487a45c1e3cbe07a825a67e623893ec63dc8caab60339a33b80a7bdbfa",
+          "exit_code": 0,
+          "finished_at": "2026-11-11T00:11:15+00:00",
+          "image": "docker.io/library/busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e",
+          "started_at": "2026-11-11T00:11:15+00:00"
+        }
+      },
+      "intent_uid": "ab5240aa-ba2b-470f-ab7f-f4273b939ed6",
+      "node_uid": "e6dc431d-40ef-4691-ba4e-bd0c5a7e4b36",
+      "phase": "Succeeded",
+      "resource_version": "546",
+      "uid": "c628b87a-9fba-4aac-b301-bd2249cf96d7"
+    },
+    "receipt_sha256": "db8c0e7889a24e002095f055a24b97879a33daf7f0441b8c9e9f40ae7662cd39",
+    "before": {
+      "slot": "terminal-hook",
+      "state": "settled",
+      "object_uid": "c628b87a-9fba-4aac-b301-bd2249cf96d7",
+      "audit_id": "b6602e46-8156-4e2e-a985-8e9ac1cd91e8",
+      "event_sha256": "1573d808b3bfa5668e022557c378b4c2fdede33f526ee1bce63f131a530368af",
+      "obligations": [
+        "object_cleanup",
+        "terminal_status"
+      ],
+      "terminal_status_sha256": null
+    },
+    "after": {
+      "slot": "terminal-hook",
+      "state": "settled",
+      "object_uid": "c628b87a-9fba-4aac-b301-bd2249cf96d7",
+      "audit_id": "b6602e46-8156-4e2e-a985-8e9ac1cd91e8",
+      "event_sha256": "1573d808b3bfa5668e022557c378b4c2fdede33f526ee1bce63f131a530368af",
+      "obligations": [
+        "object_cleanup"
+      ],
+      "terminal_status_sha256": "79f7c259c7b6360c1ec63843da51eb9c6a03f1d99b7b88d06dbb2b96c283d3d2"
+    },
+    "release_authorized": false
+  },
+  "accepted_data_original_values": {
+    "candidate_commit": "503d3bc238e2093eb0e098ecbe87b7e11ed16b4f",
+    "verified_files": 46,
+    "source_revision": "bf647f1f852f343780cbcc25884d223735d71e5a",
+    "source_lock_sha256": "e1dfd3c6230c75d97e2986f72a35b017a6d23104d5abe08b7ed7a848c223200e",
+    "image_id": "sha256:b28596c285541f409195cf979182598386a36b95a28787f46a0307c4505ba408",
+    "helm_sha256": "2bd1b649ef89175bc0ae1e0fa7de7e0583a5b0401de9896b644b8acbcae1ba64",
+    "helm_version": "v3.22.1+gd6c1a0e",
+    "node": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+    "data_resource_count": 10,
+    "effects": {
+      "chart-object-0": {
+        "kind": "NetworkPolicy",
+        "state": "settled",
+        "uid": "5864eff1-eb2e-487d-bb5f-cefce5d31e9d",
+        "audit_id": "04043052-337f-40f1-b39c-9c6da7c64806"
+      },
+      "chart-object-1": {
+        "kind": "NetworkPolicy",
+        "state": "settled",
+        "uid": "c13c44b4-2376-4df9-b072-5f522785983b",
+        "audit_id": "d3977956-a6fb-4bec-a0d1-fd6d6b88acb0"
+      },
+      "chart-object-2": {
+        "kind": "NetworkPolicy",
+        "state": "settled",
+        "uid": "0965d86a-7f51-46bd-a0b4-718f5178e916",
+        "audit_id": "dee61afc-4280-45c9-a4ea-e33648cfe4a2"
+      },
+      "chart-object-4": {
+        "kind": "Service",
+        "state": "settled",
+        "uid": "4a353372-2824-4d0e-af15-6324da15dbca",
+        "audit_id": "fee936d8-d3a4-4d0f-b9ad-88fc446f0e6c"
+      },
+      "chart-object-6": {
+        "kind": "Service",
+        "state": "settled",
+        "uid": "91925636-0406-46b7-b708-95b9a52ac7a7",
+        "audit_id": "1d07f893-35e7-44bb-bba6-648e8f4db374"
+      },
+      "helm-birbparty-data-create": {
+        "kind": "Secret",
+        "state": "settled",
+        "uid": "282b15af-757d-4e01-8e16-3fe23b0b8cb6",
+        "audit_id": "2c18cf15-f512-4d16-8d39-dcc5d98fadee"
+      }
+    },
+    "release_secret_phase": "pending-install",
+    "target_pods": 0,
+    "fixture_sha256": "c02aab5ff2602e50a4b280545e5d844f100413151bb9e6c6250818245a56764d",
+    "policy_sha256": "d06c92d8a9f03c9d21c100feb097f9825560ac17ea22ba1fcda7a75ad518d2e0",
+    "release_content_sha256": "8136e188f22aea313c5a3527a805c73b1cadc77b26419d14272619dfb8de78ca",
+    "account_activity_dispatched": false,
+    "release_authorized": false,
+    "receipt_sha256": "e7bb597ba61fd170667108411b68fffb577ce94dcc593d6476fd5902486e95b5",
+    "scope": "Direct Helm run at the frozen staging values, with no image digest overrides.",
+    "denials": {
+      "no unique approved CREATE slot": 3,
+      "every regular and init image requires a digest": 2
+    }
+  },
+  "accepted_data_locked_images": {
+    "scope": "Direct Helm data chart, all namespaced writes fenced on disposable Kubernetes",
+    "source_revision": "e90ed43a696840a3569ae3fd40e94d463ed61e5e",
+    "source_dirty": false,
+    "image_id": "sha256:b28596c285541f409195cf979182598386a36b95a28787f46a0307c4505ba408",
+    "kind_node": "kindest/node:v1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f",
+    "candidate_commit": "503d3bc238e2093eb0e098ecbe87b7e11ed16b4f",
+    "source_lock_sha256": "e1dfd3c6230c75d97e2986f72a35b017a6d23104d5abe08b7ed7a848c223200e",
+    "verified_source_files": 46,
+    "helm_version": "v3.22.1+gd6c1a0e",
+    "helm_binary_sha256": "2bd1b649ef89175bc0ae1e0fa7de7e0583a5b0401de9896b644b8acbcae1ba64",
+    "image_overlay": {
+      "postgresql": {
+        "repository": "postgres",
+        "digest": "sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24"
+      },
+      "volumePermissions": {
+        "repository": "busybox",
+        "digest": "sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e"
+      }
+    },
+    "installation_sha256": "32ae83969d63b3281ee1ded761e9398f9e9739d8bda6fdcfb20d124a58203013",
+    "release_content_sha256": "5bd9a762eee4d724ba087e82823532b30af2c2d8ced7e6187038940f33e6718c",
+    "manifest_sha256": "0332f15ab53c94f3d208618bf2b290361cd5ab5bd8d597c1c50a9a89d9aceb81",
+    "guard": {
+      "inventory_sha256": "60a53efc45d0a8635aeddf847a04ac6723408eb366735b9d36aba2d4a013bbf8",
+      "admission": {
+        "validatingadmissionpolicies/bv-proof-target-namespace": {
+          "uid": "8105e70a-d487-4d37-967a-f9436867607e",
+          "spec_sha256": "3088ecd08e0750d5aafa8868e5cf8f0eede62cedacb3a0befd468a8395504bff"
+        },
+        "validatingadmissionpolicybindings/bv-proof-target-namespace": {
+          "uid": "1cfc1f90-c3aa-41b7-9dc6-ca31bf73b8f3",
+          "spec_sha256": "b44fab90dbc221e793a0d5b6f8e0cb41c4ef93f733c48b0601d1fcc0b3decb47"
+        },
+        "validatingadmissionpolicies/bv-proof-target-validator": {
+          "uid": "d63f0901-6141-4933-b8e2-4191cf0a6207",
+          "spec_sha256": "e93266227ed36f97f5e0157f28ec405fc5e26091c1e96f13f2993b9a4bdfa8dd"
+        },
+        "validatingadmissionpolicybindings/bv-proof-target-validator": {
+          "uid": "35a11545-83d6-4a2c-82dc-2059b34a1af5",
+          "spec_sha256": "285afe92fbc40c7ec582c94e7bbea98fb134ac2271b5d7f6b5407288929b4a33"
+        },
+        "validatingadmissionpolicies/bv-proof-target-mutators": {
+          "uid": "a6921220-66ab-42ac-bb67-57de22141afa",
+          "spec_sha256": "f1c113c0229195d17f5fadb4da7d497c94c297e4ddee29aeb076bb439764a616"
+        },
+        "validatingadmissionpolicybindings/bv-proof-target-mutators": {
+          "uid": "e0d19e82-5799-4c23-af5e-3bda3592b5b7",
+          "spec_sha256": "cddd79e056dea98155a34c9abb34dbc932b99a4f1dee5c4b9dc3fda062671370"
+        }
+      }
+    },
+    "data_resource_count": 10,
+    "resources_absent": [
+      "persistentvolumeclaims/birbparty-authz-runtime",
+      "services/birbparty-data-birbparty-data-application-postgresql",
+      "services/birbparty-data-birbparty-data-openfga-postgresql"
+    ],
+    "create_slot_denials": 3,
+    "release_secret_phase": "pending-install",
+    "target_pods": 0,
+    "account_activity_state": "absent",
+    "closure": {
+      "request_id": "flux-proof",
+      "request_sha256": "6e31d0c24b4b71db771729cb5aac295fc01e43e6a47d3fe9b74ad334dde0e2e2",
+      "epoch": "9701031d-1c37-4c90-b0ac-d889a9a00b7d",
+      "reason": "cancelled",
+      "schema_version": "birbverify.deployment.closure.progress.v1",
+      "installation_sha256": "32ae83969d63b3281ee1ded761e9398f9e9739d8bda6fdcfb20d124a58203013",
+      "cluster_uid": "7836e7df-c690-4ba7-8542-1c9001952e58",
+      "namespace_uid": "70c76b47-02ee-49ef-be6e-77805a73768b",
+      "state": "sealed",
+      "effects": [
+        {
+          "slot": "chart-object-0",
+          "state": "settled",
+          "object_uid": "edff3f05-a8da-41c0-9aae-09336101d774",
+          "audit_id": "9a19d370-394b-4aa5-b9c8-e9b374a6e518",
+          "event_sha256": "e8e4c03666044ecb942487277bbff25c5f548725b2d7b00d4d8f7b53b96fe3cc",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "chart-object-1",
+          "state": "settled",
+          "object_uid": "3cedfdbe-e16b-40c7-80d9-8cf6ed7070bd",
+          "audit_id": "6a91c8f5-e86a-4a83-b9f7-9683a70d15e8",
+          "event_sha256": "65dd13891797384a58be97238300d2533a3a06b8ec207fe700c7b8fe05f545d0",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "chart-object-2",
+          "state": "settled",
+          "object_uid": "7bc2044a-4a1b-47d7-8a1f-cd91e205aa83",
+          "audit_id": "062c46ac-7efe-4bd5-b87c-295d529e8b22",
+          "event_sha256": "6612770e64b76252b58d980c35482857d879000491dd908cfdc963057fe35edc",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "chart-object-4",
+          "state": "settled",
+          "object_uid": "c55ceb46-6424-4c5e-8292-20206b81274a",
+          "audit_id": "8f0c2c1f-b1d0-433e-a2c7-bef6c38e8d15",
+          "event_sha256": "0ceaf885c1bb8ff5e8339d1fee60f5eb5b3a88a6bdd9f5fd53acf9f6917d93c0",
+          "obligations": [
+            "object_cleanup",
+            "route_cleanup"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "chart-object-6",
+          "state": "settled",
+          "object_uid": "590602de-7050-4c6e-85df-dfeeeee30d0b",
+          "audit_id": "c73b91aa-48c8-4d75-bddd-9c109e2d7278",
+          "event_sha256": "6ff2081556e8611ce34f497aa6589dd6671d1f2d8f5b00d23e305dab646c7bec",
+          "obligations": [
+            "object_cleanup",
+            "route_cleanup"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "chart-object-8",
+          "state": "settled",
+          "object_uid": "4a27f25c-738b-4c2e-94b6-dafa42b4a6c6",
+          "audit_id": "af35277a-bf5f-4f26-be88-ae387c9c36ea",
+          "event_sha256": "c31420d983653f826ef77b07af84948c5b2d1d81fd3810e6dbd4d688a21f4d73",
+          "obligations": [
+            "object_cleanup",
+            "stop_reconciliation",
+            "restore_storage"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "chart-object-9",
+          "state": "settled",
+          "object_uid": "a05fa800-494a-43b1-bc10-0972f33e0cda",
+          "audit_id": "0799b853-737f-4761-b5e9-c2c4c495a7e5",
+          "event_sha256": "183a6e30c955d022c69615387d0af70ee7421ca1c2164f5f6f4f6d479f41a3e5",
+          "obligations": [
+            "object_cleanup",
+            "stop_reconciliation",
+            "restore_storage"
+          ],
+          "terminal_status_sha256": null
+        },
+        {
+          "slot": "helm-birbparty-data-create",
+          "state": "settled",
+          "object_uid": "a659caba-2bd7-4bb0-924c-7a0a248c0709",
+          "audit_id": "adcb79dc-720e-4d70-a0f3-625f69503ea5",
+          "event_sha256": "78afd73cd39dcdc94d2e15c82225c57cba1a11e102170f5ee315cba92e796ba1",
+          "obligations": [
+            "object_cleanup"
+          ],
+          "terminal_status_sha256": null
+        }
+      ],
+      "account_activity_state": "absent",
+      "installation_obligations": [
+        "writer_and_admission_integrity",
+        "reconciliation_quiescence",
+        "baseline_restoration"
+      ],
+      "release_authorized": false
+    },
+    "receipt_sha256": "08a731510322156abdc738b81e6061ae57c79097d0fcd7ab518e2ba2c3ac7321"
+  },
+  "suites": {
+    "source_revision": "bf647f1f852f343780cbcc25884d223735d71e5a",
+    "legacy": {
+      "passed": 14,
+      "beans_journeys": 9,
+      "beans_fixture_sha256": "61fab7da1ea52123eefddc7eb67468e9ed042930435e3df7816a73c8f6d3ac95",
+      "junit_sha256": "ce0918807fe1b69a2ab952a983bf08a954485b1b85befa664f5290a0cec3cc27"
+    },
+    "closure": {
+      "source_manifest_sha256": "de61ac70a6862696c05c778e1f688262e3559b0b31a8848e100480f78b536648",
+      "worker_image": "sha256:f6008cf505d135382576aa6fd4db290a80b8103355a953b4905da04b4580d132",
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 77
+    },
+    "kubernetes": {
+      "passed": 41,
+      "receipt_sha256": {
+        "application.json": "7d732c753a099b09deae9fad6d59a1cb10ff366295968a2254315575ba0434d0",
+        "failures.json": "d98697528ea552af194a62d80a06a03d1f5910f7233ae713dd81de44c7f02a49",
+        "junit.xml": "c58e61ce4288e03afce2076a5e80a66e4dda0bc374e44937cf013c4b6ecb7fcb"
+      }
+    },
+    "inventory_and_deployment": {
+      "passed": 160,
+      "opt_in_skipped": 3
+    }
+  },
+  "opt_in_checks": {
+    "source_revision": "e90ed43a696840a3569ae3fd40e94d463ed61e5e",
+    "native_controller": {
+      "passed": 1,
+      "receipt_sha256": "83647b1695fab2849dabf0678d3fbe601c79ebd6bf8c5f29858c2cf611598974"
+    },
+    "guard": {
+      "passed": 1,
+      "receipt_sha256": "973d39adc25341de277740650f2c28faad152b80b95d1ff8c5e701ff03ddbfbd"
+    },
+    "authenticated_dispatch": {
+      "scope": "Authenticated packaged activity rejection with zero settled workloads",
+      "temporal_cli_sha256": "1d08e4e0ec7ce5397681aefe14a4ee9b738a56ca974974bfaf5a18ea922c0bc5",
+      "tls_frontend_image": "haproxy@sha256:1c3568e520453cc8ba98c39501febcf450429c80e6cc27ecad779961d76e597c",
+      "worker_image": "sha256:b28596c285541f409195cf979182598386a36b95a28787f46a0307c4505ba408",
+      "worker_cert_sha256": "0d3c440f471d4765f9c5457a71fafe396fad1478009e069251417490284c92ff",
+      "worker_identity": "worker",
+      "workflow_id": "workflow",
+      "workflow_run_id": "01a1c7f7-6548-78dd-a821-09f61da94e2d",
+      "epoch": "c4e117f4-7509-40c4-94d4-2ae2fffcc065",
+      "request_sha256": "26aec6133f14261972d913563361fd1a8ca4565055733ef2b9a4bc5fd9d09c09",
+      "operation_count": 0,
+      "unauthenticated_client_denied": true,
+      "result": "account_operation_unavailable",
+      "source_revision": "e90ed43a696840a3569ae3fd40e94d463ed61e5e",
+      "source_dirty": false
+    }
+  }
+}
