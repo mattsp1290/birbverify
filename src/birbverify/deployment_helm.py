@@ -166,6 +166,19 @@ def secret_view(obj):
         raise ValueError("invalid Helm release Secret") from None
 
 
+def verify_submitted_secret(submitted, admitted):
+    if not isinstance(submitted, dict) or not isinstance(submitted.get("metadata"), dict):
+        raise ValueError("missing submitted Helm Secret")
+    identity = admitted["metadata"]
+    # Helm can omit the URL namespace and API-owned identifiers from its request.
+    metadata = {"namespace": identity["namespace"]} | submitted["metadata"]
+    projected = secret_view(submitted | {"metadata": metadata})
+    if projected | {"metadata": identity} != admitted or any(
+        identity.get(key) != value for key, value in projected["metadata"].items()
+    ):
+        raise ValueError("submitted Helm Secret differs from admission")
+
+
 def prepare_helm_request(request, namespace, pins):
     for field, expected, original in (
         ("resource", _RESOURCE, "requestResource"),

@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from birbverify.contract import digest
-from birbverify.deployment_helm import secret_view
+from birbverify.deployment_helm import secret_view, verify_submitted_secret
 
 _SERVER_METADATA = {"uid", "resourceVersion", "generation", "creationTimestamp", "managedFields"}
 MAX_INTENTS = 2048
@@ -348,6 +348,7 @@ class Journal:
         if not isinstance(response, dict):
             raise ValueError("missing API response object")
         if helm_storage:
+            verify_submitted_secret(event.get("requestObject"), request["object"])
             response = secret_view(response)
             if (
                 request["operation"] == "UPDATE"

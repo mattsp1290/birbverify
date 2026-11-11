@@ -99,6 +99,9 @@ def completion(epoch, req):
     result = event(epoch, req)
     result["auditID"] = "audit-" + req["uid"]
     result["objectRef"].update(name=NAME, resource="secrets")
+    result["requestObject"] = copy.deepcopy(req["object"])
+    for key in ("namespace", "uid", "resourceVersion"):
+        result["requestObject"]["metadata"].pop(key, None)
     if req["operation"] == "UPDATE":
         result["responseObject"]["metadata"]["resourceVersion"] = "3"
         result["responseStatus"]["code"] = 200
@@ -127,7 +130,6 @@ def test_status_requires_settled_incarnation_and_durable_redaction(tmp_path, pha
     assert not j.admit(epoch, update | {"uid": "again"})["allowed"]
     assert [e["state"] for e in close(j, epoch, "completed")["effects"]] == ["settled", "pending"]
     ev = completion(epoch, update)
-    ev["requestObject"] = {"data": {"unknown": PRIVATE}}
     deliver(audit, ev)
     deliver(audit, ev)
     report = close(j, epoch, "completed")
@@ -196,3 +198,25 @@ def test_failed_status_and_conflicting_authenticated_replay(tmp_path):
     deliver(audit, ev)
     assert audit.snapshot(epoch)["quarantined"] == ["deployed"]
     assert PRIVATE.encode() not in j.path.read_bytes()
+
+
+@pytest.mark.parametrize("operation", ["CREATE", "UPDATE"])
+@pytest.mark.parametrize("change", ["missing", "wrong-content", "wrong-namespace"])
+def test_inconsistent_submitted_secret_quarantines_completion(tmp_path, operation, change):
+    journal, audit, epoch = ledger(tmp_path)
+    req = admission()
+    assert journal.admit(epoch, req)["allowed"]
+    if operation == "UPDATE":
+        deliver(audit, completion(epoch, req))
+        req = admission("deployed")
+        assert journal.admit(epoch, req)["allowed"]
+    ev = completion(epoch, req)
+    if change == "missing":
+        del ev["requestObject"]
+    elif change == "wrong-content":
+        ev["requestObject"]["data"] = {"unknown": PRIVATE}
+    else:
+        ev["requestObject"]["metadata"]["namespace"] = "other"
+    deliver(audit, ev)
+    assert journal.snapshot(epoch)["state"] == "quarantined"
+    assert PRIVATE.encode() not in journal.path.read_bytes()
