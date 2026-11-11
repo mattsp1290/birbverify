@@ -39,7 +39,7 @@ The existing `not_acquired` rule remains unchanged for the pinned legacy produce
 
 ## Ownership and delivery
 
-Birbverify owns the target transaction, permanent seal, lifecycle evidence adapter, closure journal, and attributable receipt. Birbforge owns admission, trusted authorization, FIFO queue decisions, and delivery eligibility. The host supervisor executes privileged reconciliation. AG-UI remains a client projection and carries no release authority. No new agent runtime or second scheduler is proposed.
+Verify owns the target transaction, permanent seal, lifecycle evidence adapter, closure journal, and attributable receipt. Birbforge owns admission, trusted authorization, FIFO queue decisions, and delivery eligibility. The host supervisor executes privileged reconciliation. AG-UI remains a client projection and carries no release authority. No new agent runtime or second scheduler is proposed.
 
 Closure is not an application outcome. A prior inconclusive manifest stays inconclusive. A passed historical manifest remains subject to existing artifact checks and current candidate, plan, and policy checks. Closure does not make a failed or missing manifest eligible. Cancellation requested and physical stop remain distinct observations.
 

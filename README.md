@@ -1,4 +1,6 @@
-# Birbverify
+# Verify
+
+Repository: [mattsp1290/verify](https://github.com/mattsp1290/verify)
 
 Versioned verification requests and attributable evidence for Birbforge.
 This repository proves a bounded local fixture contract with Python, Temporal
@@ -51,3 +53,21 @@ The [deployment producer](docs/deployment-producer.md) adds authenticated audit
 ingestion, per-request CREATE admission, closure progress, and an account/auth
 activity. Its deployment closure retains the owner. Birbforge must keep
 deployment promotion disabled.
+
+## Repository rename and compatibility
+
+This repository was renamed from `mattsp1290/birbverify` to
+[`mattsp1290/verify`](https://github.com/mattsp1290/verify). Existing checkouts can
+update their remote with:
+
+```sh
+git remote set-url origin https://github.com/mattsp1290/verify.git
+```
+
+The repository rename does not change the published interfaces. The Python
+distribution and import namespace remain `birbverify`, as do the versioned
+`birbverify.*` contracts, Temporal activity names, `BIRBVERIFY_*` environment
+variables, and installation resource identifiers and paths. Existing commands
+and consumer integrations therefore remain valid. Changing these identifiers
+requires a separate, explicitly versioned migration. Historical evidence and
+Beans identifiers retain their original names.

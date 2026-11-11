@@ -44,7 +44,7 @@ python -m birbverify.deployment_audit \
 
 Each service opens the existing journal and requires its original epoch. A
 missing volume, an empty database, a missing required table, or a replacement
-epoch prevents startup. Only trusted Birbverify processes may write the journal
+epoch prevents startup. Only trusted Verify processes may write the journal
 directory. The installer must exclude a rollback to an earlier snapshot of
 the same epoch while API effects can survive.
 

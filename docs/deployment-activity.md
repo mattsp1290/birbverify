@@ -1,6 +1,6 @@
 # Account verification activity
 
-Birbforge can dispatch `birbverify_deployment_account_auth_v1` to a dedicated Temporal worker. Birbverify records an account result before replying. The deployment profile still requires verified controller closure and retained-storage restoration before it can release a target.
+Birbforge can dispatch `birbverify_deployment_account_auth_v1` to a dedicated Temporal worker. Verify records an account result before replying. The deployment profile still requires verified controller closure and retained-storage restoration before it can release a target.
 
 ## Installation and invocation
 
