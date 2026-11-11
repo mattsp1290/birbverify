@@ -608,21 +608,37 @@ def exercise(root, cluster, stack, image):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--terminal-hook", action="store_true", help="observe one completed Helm hook Pod"
+    )
+    mode.add_argument(
+        "--accepted-data",
+        type=Path,
+        metavar="BIRBPARTY_REPO",
+        help="install the locked data chart with the reviewed Helm v3.22.1 client",
     )
     args = parser.parse_args()
     audit_policy = FIXTURE / "audit-policy.yaml"
     run_proof = exercise
-    if args.terminal_hook:
+    prefix = "bv-flux-"
+    if args.accepted_data:
+        import deployment_data
+
+        prefix = "bv-data-"
+        audit_policy = REPO / "fixtures/accepted-data/audit-policy.yaml"
+        run_proof = partial(
+            deployment_data.exercise, candidate=args.accepted_data, fixture=sys.modules[__name__]
+        )
+    elif args.terminal_hook:
         import deployment_terminal
 
+        prefix = "bv-hook-"
         audit_policy = deployment_terminal.FIXTURE / "audit-policy.yaml"
         run_proof = partial(deployment_terminal.exercise, fixture=sys.modules[__name__])
     os.umask(0o077)
     base = REPO / ".proof" / "deployment"
     base.mkdir(parents=True, exist_ok=True)
-    prefix = "bv-hook-" if args.terminal_hook else "bv-flux-"
     root = Path(tempfile.mkdtemp(prefix=prefix, dir=base))
     cluster = root.name.replace("_", "-")
     print("Proof directory", root, flush=True)
