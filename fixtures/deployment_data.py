@@ -231,7 +231,13 @@ def exercise(root, cluster, stack, image, *, candidate, fixture):
             live[rule["slot"]] = uid
         else:
             absent.append(resource)
-    assert len(errors) == len(absent)
+    assert len(policy["rules"]) == 10
+    assert set(absent) == {
+        "persistentvolumeclaims/birbparty-authz-runtime",
+        "services/birbparty-data-birbparty-data-application-postgresql",
+        "services/birbparty-data-birbparty-data-openfga-postgresql",
+    }
+    assert len(errors) == len(absent) == 3 and len(live) == 8
     assert all(
         e["state"] == "settled" and e["audit_id"] and e["event_sha256"] for e in progress["effects"]
     )

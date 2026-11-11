@@ -38,6 +38,8 @@ own API-server completion receipt.
 scripts/verify-deployment-settlement
 scripts/verify-deployment-guard
 scripts/verify-deployment-flux
+scripts/verify-deployment-flux --terminal-hook
+scripts/verify-deployment-flux --accepted-data "$BIRBPARTY_REPOSITORY"
 uv run python fixtures/deployment_activity_journey.py --source-repo "$BIRBPARTY_REPOSITORY"
 ```
 
@@ -71,3 +73,23 @@ HTTP 400 from the deployment fence. The receipt records zero accepted writes,
 zero persisted Secrets, and zero Pods for that run. The packaged Temporal worker
 separately rejected a request with zero settled workloads. Neither run produced
 a passing deployed account result. Birbforge must retain the owner.
+
+## Same-namespace Helm and hook checks
+
+The same-namespace Flux chart reached Ready. The API server reported distinct
+completions for the Secret CREATE, its status UPDATE and the ConfigMap CREATE.
+The Secret retained the same UID. The journal held the target across restart.
+The separate post-install hook check observed both container exits on the pinned
+node. Its cleanup obligation remained open.
+
+The accepted-data check requires the reviewed Helm v3.22.1 executable and a
+local Birbparty repository containing the locked candidate. The check applies the
+candidate's PostgreSQL and init-container image digests to the staging values.
+A direct Helm install settled the release Secret, three NetworkPolicies, two
+headless Services and two StatefulSets. The fence denied the authz PVC and
+the two ordinary database Services. No Pod started. The closure retained
+ownership. The fixture asserts these exact outcomes on a fresh kind cluster.
+The separate Flux check above covers the Helm controller.
+
+See the [Helm and hook receipts](evidence/deployment-helm.json) for the exact
+source, images, chart and object identities and the Linux suite results.
